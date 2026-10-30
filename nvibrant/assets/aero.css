@@ -61,7 +61,28 @@ window.aero {
 .aero spinbutton text { color: #f2f3f7; background: transparent; }
 .aero spinbutton button { padding: 3px; min-width: 18px; min-height: 18px; }
 .aero expander { color: #b7bdcc; }
-.aero headerbar button { padding: 5px; min-width: 24px; min-height: 24px; color: #d5d9e4; background: rgba(255,255,255,.06); box-shadow: none; }
-.aero headerbar button:hover { background: rgba(255,255,255,.15); }
-.aero headerbar button image { color: #d5d9e4; }
+/* Keep window controls independent from the larger pill-shaped app actions. */
+.aero headerbar { min-height: 44px; padding: 0 8px; }
+.aero headerbar windowcontrols { margin: 0; padding: 0; }
+.aero headerbar windowcontrols button {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  margin: 6px 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  color: #d5d9e4;
+  background: rgba(255,255,255,.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+}
+.aero headerbar windowcontrols button:hover { background: rgba(255,255,255,.15); }
+.aero headerbar windowcontrols button.close:hover { background: #9e3e48; color: white; }
+.aero headerbar windowcontrols button image {
+  min-width: 14px;
+  min-height: 14px;
+  margin: 0;
+  padding: 0;
+  -gtk-icon-size: 14px;
+  color: inherit;
+}
 .aero scrollbar slider { min-width: 6px; min-height: 6px; background: #555965; }
