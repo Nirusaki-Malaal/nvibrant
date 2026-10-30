@@ -131,7 +131,7 @@ cleanup() {
 
 main() {
     local action=install source_dir='' build_dir='' driver_version='' jobs='' headers='' arch=''
-    local ref=${NVIBRANT_REF:-codex/frutiger-aero-gtk}
+    local ref=${NVIBRANT_REF:-main}
     local prefix=${NVIBRANT_PREFIX:-$HOME/.local} python=${NVIBRANT_PYTHON:-/usr/bin/python3}
     local deps=false
     if [[ ${1:-} != -* && -n ${1:-} ]]; then action=$1; shift; fi

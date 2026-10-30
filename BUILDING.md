@@ -56,7 +56,7 @@ Direct equivalents:
 ## Curl bootstrap
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/codex/frutiger-aero-gtk/build.sh | bash -s -- install --install-deps
+curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/build.sh | bash -s -- install --install-deps
 ```
 
 The script clones this fork into a temporary directory, builds it, copies the
@@ -131,7 +131,7 @@ make uninstall
 Without a checkout:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/codex/frutiger-aero-gtk/build.sh | bash -s -- uninstall
+curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/build.sh | bash -s -- uninstall
 ```
 
 Uninstall removes this application's payload, two launchers and desktop file.

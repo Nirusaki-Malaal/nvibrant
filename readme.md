@@ -12,7 +12,7 @@ architecture, selects headers for the running NVIDIA driver (or the pinned tag
 when building without a GPU), compiles locally, and installs into `~/.local`.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/codex/frutiger-aero-gtk/build.sh | bash -s -- install --install-deps
+curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/build.sh | bash -s -- install --install-deps
 ```
 
 `--install-deps` opts into installing system packages and may invoke `sudo`.
@@ -29,7 +29,7 @@ Launch from the app menu or run:
 You can also save and inspect the script before running it:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/codex/frutiger-aero-gtk/build.sh -o nvibrant-build.sh
+curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/build.sh -o nvibrant-build.sh
 bash nvibrant-build.sh install --install-deps
 ```
 
@@ -46,7 +46,7 @@ Apple GPUs, integrated Intel/AMD displays, or every Jetson driver stack.
 ## Build with Make
 
 ```bash
-git clone --branch codex/frutiger-aero-gtk https://github.com/Nirusaki-Malaal/nvibrant.git
+git clone --branch main https://github.com/Nirusaki-Malaal/nvibrant.git
 cd nvibrant
 make deps           # optional: install distro build and GTK dependencies
 make                # native Meson/Ninja build
