@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="680" viewBox="0 0 1600 680" fill="none" role="img" aria-labelledby="title description">
+  <title id="title">nVibrant Glass — Find your spectrum</title>
+  <desc id="description">An original dark glass composition: silver typography beside a luminous V-shaped optical prism, a precision aperture and flowing ribbons of blue, violet and green light.</desc>
+  <defs>
+    <linearGradient id="back" x1="120" y1="0" x2="1500" y2="680" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1A1D25"/><stop offset=".48" stop-color="#090B10"/><stop offset="1" stop-color="#101119"/>
+    </linearGradient>
+    <radialGradient id="halo"><stop stop-color="#7383D7" stop-opacity=".25"/><stop offset=".5" stop-color="#686BB6" stop-opacity=".09"/><stop offset="1" stop-color="#686BB6" stop-opacity="0"/></radialGradient>
+    <radialGradient id="sphere" cx=".31" cy=".18" r=".9"><stop stop-color="#606979"/><stop offset=".25" stop-color="#282F40"/><stop offset=".58" stop-color="#0D111C"/><stop offset=".87" stop-color="#171C2D"/><stop offset="1" stop-color="#3F4562"/></radialGradient>
+    <linearGradient id="rim" x1="960" y1="140" x2="1330" y2="550" gradientUnits="userSpaceOnUse"><stop stop-color="#D7E0F5"/><stop offset=".22" stop-color="#69718A"/><stop offset=".49" stop-color="#242A3B"/><stop offset=".73" stop-color="#B8BDDC"/><stop offset="1" stop-color="#393E59"/></linearGradient>
+    <linearGradient id="spectrum" x1="840" y1="390" x2="1480" y2="280" gradientUnits="userSpaceOnUse"><stop stop-color="#73FFD1"/><stop offset=".25" stop-color="#69DBFF"/><stop offset=".49" stop-color="#9CA9FF"/><stop offset=".74" stop-color="#CA95FF"/><stop offset="1" stop-color="#FFB6D5"/></linearGradient>
+    <linearGradient id="ribbon" x1="750" y1="440" x2="1560" y2="220" gradientUnits="userSpaceOnUse"><stop stop-color="#81F9D6" stop-opacity="0"/><stop offset=".23" stop-color="#81F9D6" stop-opacity=".62"/><stop offset=".48" stop-color="#97BDFF" stop-opacity=".9"/><stop offset=".76" stop-color="#C5A0FF" stop-opacity=".65"/><stop offset="1" stop-color="#D2ACFF" stop-opacity="0"/></linearGradient>
+    <linearGradient id="silver" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFFFFF"/><stop offset=".5" stop-color="#D9DFED"/><stop offset="1" stop-color="#AEB9CF"/></linearGradient>
+    <linearGradient id="glassV" x1="1020" y1="240" x2="1210" y2="460" gradientUnits="userSpaceOnUse"><stop stop-color="#FAFCFF" stop-opacity=".9"/><stop offset=".23" stop-color="#DFE7FF" stop-opacity=".34"/><stop offset=".6" stop-color="#7E91B8" stop-opacity=".10"/><stop offset="1" stop-color="#D9E4FF" stop-opacity=".7"/></linearGradient>
+    <linearGradient id="sheen" x1="1030" y1="155" x2="1140" y2="310" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFFFF" stop-opacity=".78"/><stop offset=".65" stop-color="#E4EDFF" stop-opacity=".12"/><stop offset="1" stop-color="#E4EDFF" stop-opacity="0"/></linearGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#A9B6CF" stop-opacity=".3"/><stop offset="1" stop-color="#A9B6CF" stop-opacity="0"/></linearGradient>
+    <filter id="glow" x="-30%" y="-100%" width="160%" height="300%"><feGaussianBlur stdDeviation="9"/></filter>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="200%"><feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#000000" flood-opacity=".6"/></filter>
+    <clipPath id="canvas"><rect x="1" y="1" width="1598" height="678" rx="30"/></clipPath>
+    <clipPath id="orbClip"><circle cx="1145" cy="335" r="202"/></clipPath>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" stroke="#D4DDF9" stroke-opacity=".026"/></pattern>
+  </defs>
+  <g clip-path="url(#canvas)">
+    <path fill="url(#back)" d="M0 0h1600v680H0z"/>
+    <path fill="url(#grid)" d="M0 0h1600v680H0z"/>
+    <ellipse cx="1160" cy="330" rx="440" ry="370" fill="url(#halo)"/>
+    <path d="M76 91H1524" stroke="#FFFFFF" stroke-opacity=".08"/>
+    <g font-family="Inter, SF Pro Display, DejaVu Sans, sans-serif">
+      <circle cx="86" cy="55" r="5" fill="#CBD8F6"/>
+      <circle cx="86" cy="55" r="10" stroke="#CBD8F6" stroke-opacity=".18"/>
+      <text x="112" y="61" fill="#E4E8F1" font-size="16" font-weight="600" letter-spacing="3">NVIBRANT / GLASS</text>
+      <text x="1520" y="60" fill="#929BB1" font-size="11" letter-spacing="2" text-anchor="end">COLOUR CONTROL, REFINED.</text>
+      <text x="83" y="196" fill="#9AA7C3" font-size="12" font-weight="500" letter-spacing="4">FIND YOUR SPECTRUM</text>
+      <text x="76" y="308" fill="url(#silver)" font-size="100" font-weight="600" letter-spacing="-7">nVibrant</text>
+      <text x="76" y="412" fill="url(#silver)" font-size="100" font-weight="300" letter-spacing="-6">Glass.</text>
+      <text x="83" y="467" fill="#A8B2C7" font-size="19" letter-spacing=".1">A little more depth. A little more life.</text>
+      <path d="M84 506H650" stroke="url(#fade)"/>
+      <g font-size="11" letter-spacing="1.5" fill="#B9C2D5">
+        <rect x="83" y="530" width="87" height="31" rx="15.5" fill="#FFFFFF" fill-opacity=".035" stroke="#FFFFFF" stroke-opacity=".12"/>
+        <text x="126.5" y="550" text-anchor="middle">LINUX</text>
+        <rect x="181" y="530" width="102" height="31" rx="15.5" fill="#FFFFFF" fill-opacity=".035" stroke="#FFFFFF" stroke-opacity=".12"/>
+        <text x="232" y="550" text-anchor="middle">NVIDIA</text>
+        <rect x="294" y="530" width="117" height="31" rx="15.5" fill="#FFFFFF" fill-opacity=".035" stroke="#FFFFFF" stroke-opacity=".12"/>
+        <text x="352.5" y="550" text-anchor="middle">WAYLAND</text>
+        <rect x="422" y="530" width="90" height="31" rx="15.5" fill="#FFFFFF" fill-opacity=".035" stroke="#FFFFFF" stroke-opacity=".12"/>
+        <text x="467" y="550" text-anchor="middle">GTK 4</text>
+      </g>
+    </g>
+    <!-- Instrument-like aperture, with discrete etched calibration marks. -->
+    <circle cx="1145" cy="335" r="246" stroke="#B9C7EA" stroke-opacity=".07"/>
+    <circle cx="1145" cy="335" r="230" stroke="#B9C7EA" stroke-opacity=".10" stroke-dasharray="1 14"/>
+    <path d="M1145 79V100M1145 570V591M889 335H910M1380 335H1401" stroke="#B9C7EA" stroke-opacity=".36"/>
+    <path d="M950 153A266 266 0 0 1 1328 141" stroke="#C8D5F3" stroke-opacity=".10"/>
+    <path d="M968 532A266 266 0 0 0 1330 526" stroke="#C8D5F3" stroke-opacity=".12"/>
+    <g filter="url(#shadow)">
+      <circle cx="1145" cy="335" r="203" fill="url(#sphere)" stroke="url(#rim)" stroke-width="1.5"/>
+    </g>
+    <circle cx="1145" cy="335" r="194" stroke="#CCD9F3" stroke-opacity=".055"/>
+    <!-- Two glass facets form a distinct V rather than a generic sphere icon. -->
+    <g clip-path="url(#orbClip)">
+      <path d="M1021 246L1096 235L1143 361L1115 444Z" fill="url(#glassV)" stroke="#F2F5FF" stroke-opacity=".45"/>
+      <path d="M1115 444L1198 229L1270 246L1169 440Z" fill="url(#glassV)" stroke="#E3EAFF" stroke-opacity=".35"/>
+      <path d="M1021 246L1115 444L1198 229" stroke="#F5F8FF" stroke-opacity=".5" stroke-width="1.5"/>
+      <path d="M1115 444L1169 440L1270 246" stroke="url(#spectrum)" stroke-width="2"/>
+      <ellipse cx="1091" cy="198" rx="137" ry="53" transform="rotate(-17 1091 198)" fill="url(#sheen)"/>
+      <path d="M973 427C1080 526 1228 475 1314 362" stroke="#B6C7FF" stroke-opacity=".10" stroke-width="8"/>
+    </g>
+    <!-- The spectrum passes through, then separates into fine light filaments. -->
+    <path d="M786 414C939 464 1021 423 1141 347S1380 238 1536 290" stroke="url(#ribbon)" stroke-width="13" opacity=".65" filter="url(#glow)"/>
+    <g stroke-linecap="round">
+      <path d="M774 415C932 462 1020 420 1142 345S1380 238 1543 290" stroke="url(#ribbon)" stroke-width="2.5"/>
+      <path d="M800 429C955 474 1032 433 1154 357S1380 249 1530 304" stroke="url(#ribbon)" stroke-width="1.1" opacity=".65"/>
+      <path d="M819 443C966 485 1045 445 1168 369S1382 266 1512 318" stroke="url(#ribbon)" opacity=".4"/>
+      <path d="M838 454C981 491 1062 458 1183 381S1380 280 1493 331" stroke="url(#ribbon)" opacity=".23"/>
+    </g>
+    <circle cx="1143" cy="345" r="4" fill="#E8EEFF"/>
+    <circle cx="1143" cy="345" r="10" stroke="#D3DFFF" stroke-opacity=".23"/>
+    <g font-family="Inter, DejaVu Sans, sans-serif" font-size="10" letter-spacing="2" fill="#77849F">
+      <path d="M1323 463H1408L1430 485" fill="none" stroke="#77849F" stroke-opacity=".4"/>
+      <circle cx="1323" cy="463" r="2" fill="#A5B4D5"/>
+      <text x="1435" y="497" text-anchor="end">DIGITAL VIBRANCE</text>
+      <text x="1145" y="620" text-anchor="middle">PRECISION MEETS PERCEPTION</text>
+      <text x="83" y="625" fill="#6E788E">OPEN SOURCE / MADE FOR YOUR PIXELS</text>
+    </g>
+    <path d="M76 652H1524" stroke="#FFFFFF" stroke-opacity=".045"/>
+  </g>
+  <rect x="1" y="1" width="1598" height="678" rx="30" stroke="#DCE5FF" stroke-opacity=".12"/>
+</svg>
