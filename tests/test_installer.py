@@ -41,6 +41,9 @@ class InstallerTests(unittest.TestCase):
                          'backend:--list-json')
         desktop = (self.prefix / 'share/applications' / installer.DESKTOP).read_text()
         self.assertIn(f'Exec="{gui}"', desktop)
+        self.assertIn(f'Icon={installer.APP_ID}', desktop)
+        icon = self.prefix / 'share/icons/hicolor/scalable/apps' / f'{installer.APP_ID}.svg'
+        self.assertEqual(icon.read_bytes(), (ROOT / 'nvibrant/assets' / icon.name).read_bytes())
         self.assertFalse((self.prefix / 'lib/nvibrant/nvibrant/main.cpp').exists())
 
     def test_reinstall_and_uninstall_leave_other_prefix_files_alone(self):

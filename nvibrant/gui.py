@@ -28,6 +28,9 @@ class AeroWindow(Gtk.ApplicationWindow):
     def __init__(self, app, demo=False):
         super().__init__(application=app, title='nVibrant Glass')
         self.set_default_size(820, 780)
+        Gtk.IconTheme.get_for_display(self.get_display()).add_search_path(
+            str(Path(__file__).with_name('assets')))
+        self.set_icon_name('io.github.nvibrant.Aero')
         self.backend = Backend(demo)
         self.ports = []
         self.scales = {}

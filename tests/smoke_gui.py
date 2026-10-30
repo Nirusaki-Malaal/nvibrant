@@ -32,6 +32,8 @@ def settle():
 
 def exercise():
     settle()
+    assert window.get_icon_name() == 'io.github.nvibrant.Aero'
+    assert Gtk.IconTheme.get_for_display(window.get_display()).has_icon(window.get_icon_name())
     assert len(window.scales) == 2
     window.scales[0].set_value(512)
     assert 'Pending' in window.status.get_text()

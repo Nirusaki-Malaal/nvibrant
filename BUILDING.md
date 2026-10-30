@@ -107,6 +107,7 @@ lib/nvibrant/build/nvibrant               Private, driver-matched native backend
 lib/nvibrant/nvibrant/                    Python package and glass theme
 lib/nvibrant/.nvibrant-install.json       Installation/driver metadata
 share/applications/io.github.nvibrant.Aero.desktop
+share/icons/hicolor/scalable/apps/io.github.nvibrant.Aero.svg
 ```
 
 The GUI resolves its private backend beside the package; an upstream system CLI
@@ -135,7 +136,8 @@ curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/build
 ```
 
 Uninstall removes this application's payload, two launchers and desktop file.
-Other prefix contents and cached headers remain.
+The custom app icon is also removed and desktop/icon caches are refreshed when
+the corresponding tools are available. Other prefix contents and cached headers remain.
 
 ## Verification
 

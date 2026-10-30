@@ -7,15 +7,18 @@ from pathlib import Path
 import shlex
 import shutil
 import sys
+import subprocess
 import tempfile
 
 MARKER = '.nvibrant-install.json'
-DESKTOP = 'io.github.nvibrant.Aero.desktop'
+APP_ID = 'io.github.nvibrant.Aero'
+DESKTOP = f'{APP_ID}.desktop'
 
 
 def locations(prefix):
     return (prefix / 'lib/nvibrant', prefix / 'bin/nvibrant-gtk',
-            prefix / 'bin/nvibrant', prefix / 'share/applications' / DESKTOP)
+            prefix / 'bin/nvibrant', prefix / 'share/applications' / DESKTOP,
+            prefix / 'share/icons/hicolor/scalable/apps' / f'{APP_ID}.svg')
 
 
 def exists(path):
@@ -23,24 +26,24 @@ def exists(path):
 
 
 def check_owned(prefix):
-    app, gui, cli, desktop = locations(prefix)
+    app, gui, cli, desktop, icon = locations(prefix)
     if app.is_symlink():
         raise RuntimeError(f'Refusing to replace a symlink installation directory: {app}')
     if exists(app):
         marker = app / MARKER
         if not marker.is_file() or json.loads(marker.read_text()).get('application') != 'nvibrant-glass':
             raise RuntimeError(f'Refusing to replace an unrecognized directory: {app}')
-    elif any(exists(p) for p in (gui, cli, desktop)):
+    elif any(exists(p) for p in (gui, cli, desktop, icon)):
         raise RuntimeError('An existing launcher or desktop file would be overwritten. Use another prefix.')
-    return app, gui, cli, desktop
+    return app, gui, cli, desktop, icon
 
 
 def install(source, build_dir, prefix, driver):
-    app, gui, cli, desktop = check_owned(prefix)
+    app, gui, cli, desktop, icon = check_owned(prefix)
     backend = build_dir / 'nvibrant'
     if not backend.is_file() or not os.access(backend, os.X_OK):
         raise RuntimeError(f'Backend is missing or not executable: {backend}')
-    for directory in (app.parent, gui.parent, desktop.parent):
+    for directory in (app.parent, gui.parent, desktop.parent, icon.parent):
         directory.mkdir(parents=True, exist_ok=True)
     staging = Path(tempfile.mkdtemp(prefix='.nvibrant-install-', dir=app.parent))
     backup = app.with_name('.nvibrant-previous')
@@ -78,6 +81,7 @@ exec INTERPRETER -m nvibrant.gui "$@"
                 cli.unlink()
             cli.symlink_to('../lib/nvibrant/build/nvibrant')
             desktop.write_text(entry)
+            shutil.copy2(app / 'nvibrant/assets' / f'{APP_ID}.svg', icon)
         except Exception:
             # Restore the previous complete payload on an interrupted upgrade.
             if backup.exists():
@@ -89,6 +93,7 @@ exec INTERPRETER -m nvibrant.gui "$@"
     finally:
         if staging.exists():
             shutil.rmtree(staging)
+    refresh_desktop(prefix)
     print(f'Installed nVibrant Glass into {prefix}')
     print(f'Launch: {gui}')
     print(f'Uninstall: bash build.sh uninstall --prefix {shlex.quote(str(prefix))}')
@@ -98,15 +103,31 @@ exec INTERPRETER -m nvibrant.gui "$@"
 
 
 def uninstall(prefix):
-    app, gui, cli, desktop = check_owned(prefix)
+    app, gui, cli, desktop, icon = check_owned(prefix)
     if not app.exists():
         print(f'No nVibrant Glass installation at {prefix}')
         return
-    for path in (gui, cli, desktop):
+    for path in (gui, cli, desktop, icon):
         if exists(path):
             path.unlink()
     shutil.rmtree(app)
+    refresh_desktop(prefix)
     print(f'Uninstalled nVibrant Glass from {prefix}')
+
+
+def refresh_desktop(prefix):
+    # These cache tools are optional; desktops can also discover files directly.
+    for name, arguments in (
+        ('gtk-update-icon-cache', ['--force', '--ignore-theme-index', str(prefix / 'share/icons/hicolor')]),
+        ('update-desktop-database', [str(prefix / 'share/applications')]),
+    ):
+        command = shutil.which(name)
+        if command:
+            try:
+                subprocess.run([command, *arguments], check=False, timeout=10,
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except (OSError, subprocess.TimeoutExpired):
+                pass
 
 
 def main():
