@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=nVibrant Glass
-Comment=Fine-tune your colours — NVIDIA digital vibrance
+Comment=Fine-tune your colours - NVIDIA digital vibrance
 Exec=nvibrant-gtk
 Icon=io.github.nvibrant.Aero
 Terminal=false

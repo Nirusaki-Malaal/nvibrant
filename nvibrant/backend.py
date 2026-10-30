@@ -49,7 +49,7 @@ class Backend:
                 raise ValueError('Invalid output or vibrance value')
             args[index] = value
         if self.demo:
-            return 'Demo only — no display settings changed.'
+            return 'Demo only - no display settings changed.'
         output = self.run(*args)
         if 'Success' not in output:
             raise RuntimeError(output or 'No display accepted the setting')

@@ -1,4 +1,4 @@
-"""nVibrant Glass — native GTK 4 display controls."""
+"""nVibrant Glass - native GTK 4 display controls."""
 import argparse
 import math
 import sys

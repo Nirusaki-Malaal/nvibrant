@@ -1,11 +1,11 @@
 # nVibrant Glass
 
-![nVibrant Glass — Find your spectrum](assets/nvibrant-glass.svg)
+![nVibrant Glass - Find your spectrum](assets/nvibrant-glass.svg)
 
 A native GTK 4 control panel for NVIDIA digital vibrance on Linux, with glossy
 black glass panels, per-display sliders, presets, and explicit Apply/Reset.
 
-![nVibrant Glass — glossy black GTK interface](screenshots/aero.png)
+![nVibrant Glass - glossy black GTK interface](screenshots/aero.png)
 
 ## Install with curl
 
