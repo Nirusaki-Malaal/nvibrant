@@ -10,6 +10,7 @@ gi.require_version('Gtk', '4.0')
 gi.require_version('Gdk', '4.0')
 from gi.repository import Gdk, Gio, GLib, Gtk
 from nvibrant.backend import Backend
+from nvibrant.settings import SettingsStore
 
 
 def label(text, css=None):
@@ -25,13 +26,22 @@ def box(vertical=False, spacing=12):
 
 
 class AeroWindow(Gtk.ApplicationWindow):
-    def __init__(self, app, demo=False):
+    def __init__(self, app, demo=False, settings=None, backend=None):
         super().__init__(application=app, title='nVibrant Glass')
         self.set_default_size(820, 780)
         Gtk.IconTheme.get_for_display(self.get_display()).add_search_path(
             str(Path(__file__).with_name('assets')))
         self.set_icon_name('io.github.nvibrant.Aero')
-        self.backend = Backend(demo)
+        self.demo = demo
+        self.backend = backend if backend is not None else Backend(demo)
+        self.settings = settings if settings is not None else SettingsStore()
+        self.settings_warning = ''
+        if not demo:
+            try:
+                self.settings.load()
+            except (OSError, ValueError) as exc:
+                self.settings_warning = str(exc)
+        self.saved_loaded = False
         self.ports = []
         self.scales = {}
         self.busy = False
@@ -63,6 +73,7 @@ class AeroWindow(Gtk.ApplicationWindow):
         spacer = box(); spacer.set_hexpand(True); toolbar.append(spacer)
         toolbar.append(label('NVIDIA GPU', 'muted'))
         self.gpu = Gtk.SpinButton.new_with_range(0, 15, 1)
+        self.gpu.set_value(0 if demo else self.settings.last_gpu)
         self.gpu.set_tooltip_text('NVIDIA GPU index; change it, then click Refresh')
         self.gpu.connect('value-changed', self.invalidate_gpu)
         toolbar.append(self.gpu)
@@ -91,13 +102,14 @@ class AeroWindow(Gtk.ApplicationWindow):
         root.append(self.status)
         details = Gtk.Expander(label='Details & compatibility')
         self.log = label('NVIDIA must drive the display directly. Hybrid laptop screens may use the iGPU.\n'
-                         'Values start at natural (0); they are pending choices, not a reading of current settings.\n'
-                         'Settings last until the driver resets; this app does not install an autostart service.', 'muted')
+                         'Sliders remember the last successfully applied values for each GPU/output.\n'
+                         'Saved values are loaded without changing your screen. Click Apply to restore them after a driver reset.', 'muted')
         self.log.set_wrap(True)
         self.log.set_selectable(True)
         details.set_child(self.log)
         root.append(details)
-        self.demo = demo
+        if self.settings_warning:
+            self.log.set_text(self.settings_warning)
         self.discover()
 
     @staticmethod
@@ -195,17 +207,29 @@ class AeroWindow(Gtk.ApplicationWindow):
             while child := self.cards.get_first_child():
                 self.cards.remove(child)
             retained = False
+            self.saved_loaded = False
             for port in ports:
                 if port['connected']:
                     keep = previous.get(port['index']) == port and port['index'] in values
-                    self.add_card(port, values[port['index']] if keep else 0)
+                    saved = None if self.demo else self.settings.value(self.backend.gpu, port)
+                    self.add_card(port, values[port['index']] if keep else (saved if saved is not None else 0))
+                    self.saved_loaded |= not keep and saved is not None
                     retained |= keep
             self.dirty = was_dirty and retained
         self.ports = ports
-        self.status.set_text('Pending changes preserved • Click Apply colours when ready.' if self.dirty else
-                             ('DEMO MODE • No hardware changes will be made.' if self.demo else
-                              ('Ready. Choose your colours below.' if self.scales else
-                               'No connected NVIDIA displays. Try another GPU index or check hybrid graphics.')))
+        if self.dirty:
+            message = 'Pending changes preserved • Click Apply colours when ready.'
+        elif self.demo:
+            message = 'DEMO MODE • No hardware changes will be made.'
+        elif self.settings_warning:
+            message = 'Saved settings could not be loaded • See Details below.'
+        elif not self.scales:
+            message = 'No connected NVIDIA displays. Try another GPU index or check hybrid graphics.'
+        elif self.saved_loaded:
+            message = 'Saved colours loaded • Click Apply colours to restore them if needed.'
+        else:
+            message = 'Ready. Choose your colours below.'
+        self.status.set_text(message)
 
     def add_card(self, port, initial_value=0):
         card = box(True, 14); card.add_css_class('glass-card')
@@ -250,12 +274,29 @@ class AeroWindow(Gtk.ApplicationWindow):
             return
         values = {index: round(scale.get_value()) for index, scale in self.scales.items()}
         self.status.set_text('Applying colours…')
-        def done(output):
+        gpu = self.backend.gpu
+        ports = list(self.ports)
+        def work():
+            output = self.backend.apply(ports, values)
+            if not self.demo:
+                try:
+                    self.settings.save(gpu, ports, values)
+                except (OSError, ValueError) as exc:
+                    return output, str(exc)
+            return output, None
+        def done(result):
+            output, save_error = result
             self.dirty = False
             self.log.set_text(output)
-            self.status.set_text('Demo preview updated • Your displays were not changed.' if self.demo else
-                                 'Colours applied. Enjoy the view.')
-        self.task(lambda: self.backend.apply(self.ports, values), done)
+            if save_error:
+                self.status.add_css_class('error')
+                self.status.set_text('Colours applied, but settings could not be saved • See Details below.')
+                self.log.set_text(f'{output}\n\nSettings: {save_error}')
+            else:
+                self.settings_warning = ''
+                self.status.set_text('Demo preview updated • Your displays were not changed.' if self.demo else
+                                     'Colours applied and saved. Enjoy the view.')
+        self.task(work, done)
 
 
 def main():

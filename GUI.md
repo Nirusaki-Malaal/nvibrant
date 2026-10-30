@@ -39,7 +39,7 @@ how the installed payload is laid out.
 1. The app discovers NVIDIA outputs **without changing any colours**.
 2. Choose a preset or move each display's slider. Keyboard arrows work too.
 3. Click **Apply colours**. Changes are explicit; moving a slider alone does
-   not change your screen.
+   not change your screen. Successful Apply also saves those values.
 4. **Reset to natural**, then Apply, restores zero vibrance to connected outputs
    on the selected GPU.
 5. For a second NVIDIA GPU, change the index and click **Refresh**. Refresh
@@ -47,11 +47,24 @@ how the installed payload is laid out.
    detection, and disables stale controls if detection fails.
 
 Values range from −1024 (grayscale) through 0 (natural) to 1023 (maximum).
-Initial sliders show **pending zero values**, not a reading of current hardware
-settings. Apply sends every connected output's displayed value together.
-Output numbering uses NVIDIA's physical connector order, preserving gaps for
-unplugged ports. Settings can reset after reboot, sleep or driver/display changes;
-there is no automatic persistence in this first version.
+On reopening, sliders show the last successfully applied values for each NVIDIA
+GPU/output, and the GPU selector returns to the last successfully applied GPU.
+Outputs without a saved value start at zero. These are saved choices, not a
+reading of current hardware settings. Apply sends every connected output's
+displayed value together.
+
+Preferences live in `~/.config/nvibrant/settings.json` (or under an absolute
+`XDG_CONFIG_HOME`). Only a successful Apply saves them. Unapplied edits, failed
+driver calls and demo previews do not overwrite your saved values. Reset to
+natural is remembered after you click Apply. Different GPU indices and physical
+output connectors have separate values; moving a monitor to another port uses
+that port's preferences.
+
+Opening or refreshing still does not change hardware settings. If reboot, sleep
+or a driver reset clears the effect, open the app and click Apply to restore the
+saved values. The app does not install an autostart service. If settings cannot
+be read or written, the status and Details explain the error without claiming
+they were saved. User preferences survive application upgrades and uninstall.
 
 On hybrid laptops, an internal screen driven by the integrated GPU is not
 controllable through nVibrant. Expand Details for backend errors. The GUI never

@@ -137,7 +137,8 @@ curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/build
 
 Uninstall removes this application's payload, two launchers and desktop file.
 The custom app icon is also removed and desktop/icon caches are refreshed when
-the corresponding tools are available. Other prefix contents and cached headers remain.
+the corresponding tools are available. Other prefix contents, cached headers and user preferences in
+`~/.config/nvibrant/settings.json` (or `XDG_CONFIG_HOME`) remain.
 
 ## Verification
 

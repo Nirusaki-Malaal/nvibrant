@@ -28,6 +28,7 @@ test:
 	cd "$(ROOT)" && "$(PYTHON)" -m unittest discover -s tests -v
 test-gui:
 	cd "$(ROOT)" && xvfb-run -a env GDK_BACKEND=x11 GSK_RENDERER=cairo "$(PYTHON)" tests/smoke_gui.py
+	cd "$(ROOT)" && xvfb-run -a env GDK_BACKEND=x11 GSK_RENDERER=cairo "$(PYTHON)" tests/smoke_settings.py
 clean:
 	meson compile -C "$(BUILD_DIR)" --clean
 help:
