@@ -1,4 +1,4 @@
-"""nVibrant Aero — native GTK 4 display controls."""
+"""nVibrant Glass — native GTK 4 display controls."""
 import argparse
 import math
 import sys
@@ -26,7 +26,7 @@ def box(vertical=False, spacing=12):
 
 class AeroWindow(Gtk.ApplicationWindow):
     def __init__(self, app, demo=False):
-        super().__init__(application=app, title='nVibrant Aero')
+        super().__init__(application=app, title='nVibrant Glass')
         self.set_default_size(820, 780)
         self.backend = Backend(demo)
         self.ports = []
@@ -35,7 +35,7 @@ class AeroWindow(Gtk.ApplicationWindow):
         self.dirty = False
         self.connect('close-request', self.on_close)
         header = Gtk.HeaderBar()
-        header.set_title_widget(label('nVibrant  /  Aero', 'wordmark'))
+        header.set_title_widget(label('nVibrant  /  Glass', 'wordmark'))
         self.set_titlebar(header)
         self.add_css_class('aero')
         scroll = Gtk.ScrolledWindow(hscrollbar_policy=Gtk.PolicyType.NEVER)
@@ -50,9 +50,9 @@ class AeroWindow(Gtk.ApplicationWindow):
         hero.append(orb)
         titles = box(True, 4)
         titles.set_valign(Gtk.Align.CENTER)
-        titles.append(label('A LITTLE MORE ALIVE', 'eyebrow'))
-        titles.append(label('Let your colours bloom.', 'headline'))
-        titles.append(label('Digital vibrance. A fresh perspective.', 'subtitle'))
+        titles.append(label('COLOUR, REFINED', 'eyebrow'))
+        titles.append(label('Your display. More vivid.', 'headline'))
+        titles.append(label('Fine-tune your colours. Find your balance.', 'subtitle'))
         hero.append(titles)
         root.append(hero)
         toolbar = box()
@@ -101,18 +101,31 @@ class AeroWindow(Gtk.ApplicationWindow):
     def draw_orb(area, cr, w, h):
         import cairo
         cr.save(); cr.scale(w / 104, h / 104)
-        gradient = cairo.RadialGradient(35, 24, 4, 53, 56, 49)
-        gradient.add_color_stop_rgb(0, .74, 1, .84)
-        gradient.add_color_stop_rgb(.48, .15, .79, .61)
-        gradient.add_color_stop_rgb(1, .01, .39, .58)
+        gradient = cairo.RadialGradient(34, 23, 2, 54, 57, 51)
+        gradient.add_color_stop_rgb(0, .56, .60, .69)
+        gradient.add_color_stop_rgb(.34, .22, .25, .32)
+        gradient.add_color_stop_rgb(.72, .06, .07, .10)
+        gradient.add_color_stop_rgb(1, .15, .18, .25)
         cr.arc(52, 52, 47, 0, 2 * math.pi); cr.set_source(gradient); cr.fill()
-        cr.set_source_rgba(1, 1, 1, .45)
-        cr.save(); cr.translate(50, 30); cr.scale(1, .48)
-        cr.arc(0, 0, 34, 0, 2 * math.pi); cr.fill(); cr.restore()
-        cr.set_source_rgba(1, 1, 1, .9); cr.set_line_width(2.5)
-        cr.move_to(30, 68); cr.curve_to(32, 44, 69, 32, 76, 44)
-        cr.curve_to(70, 69, 45, 79, 30, 68); cr.stroke()
-        cr.move_to(32, 70); cr.line_to(65, 48); cr.stroke(); cr.restore()
+        cr.set_line_width(1)
+        cr.set_source_rgba(.83, .88, 1, .45)
+        cr.arc(52, 52, 47, 0, 2 * math.pi); cr.stroke()
+        sheen = cairo.LinearGradient(0, 12, 0, 58)
+        sheen.add_color_stop_rgba(0, 1, 1, 1, .7)
+        sheen.add_color_stop_rgba(1, 1, 1, 1, 0)
+        cr.save(); cr.translate(47, 30); cr.rotate(-.3); cr.scale(1, .42)
+        cr.arc(0, 0, 33, 0, 2 * math.pi); cr.set_source(sheen); cr.fill(); cr.restore()
+        # A quiet spectral wave suspended inside the dark glass sphere.
+        wave = cairo.LinearGradient(24, 0, 81, 0)
+        wave.add_color_stop_rgb(0, .55, .74, 1)
+        wave.add_color_stop_rgb(.5, .91, .9, 1)
+        wave.add_color_stop_rgb(1, .66, .63, .92)
+        cr.set_source(wave); cr.set_line_width(2.5)
+        cr.set_line_cap(cairo.LINE_CAP_ROUND)
+        cr.move_to(25, 61); cr.curve_to(39, 76, 61, 35, 80, 47); cr.stroke()
+        cr.set_source_rgba(.83, .89, 1, .35); cr.set_line_width(1.2)
+        cr.move_to(26, 68); cr.curve_to(46, 81, 64, 46, 80, 54); cr.stroke()
+        cr.restore()
 
     def on_close(self, *_):
         # Let an in-flight driver request report its result before closing.
@@ -199,7 +212,7 @@ class AeroWindow(Gtk.ApplicationWindow):
         spacer = box(); spacer.set_hexpand(True); ends.append(spacer)
         ends.append(label('Full bloom', 'muted')); card.append(ends)
         presets = box(False, 8)
-        for name, amount in [('Natural', 0), ('Fresh', 256), ('Vivid', 512), ('Aero', 768)]:
+        for name, amount in [('Natural', 0), ('Fresh', 256), ('Vivid', 512), ('Luminous', 768)]:
             button = Gtk.Button(label=name)
             button.connect('clicked', lambda _, s=scale, v=amount: s.set_value(v))
             presets.append(button)
@@ -230,7 +243,7 @@ class AeroWindow(Gtk.ApplicationWindow):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='nVibrant Aero GTK 4 interface')
+    parser = argparse.ArgumentParser(description='nVibrant Glass GTK 4 interface')
     parser.add_argument('--demo', action='store_true', help='Preview without accessing NVIDIA hardware')
     args = parser.parse_args()
     app = Gtk.Application(application_id='io.github.nvibrant.Aero',

@@ -1,9 +1,9 @@
-# nVibrant Aero
+# nVibrant Glass
 
-A native GTK 4 interface for nVibrant, styled with aqua gradients, glass-like
-cards, glossy controls and a little Frutiger Aero nostalgia.
+A native GTK 4 interface for nVibrant, styled with glossy black glass panels, silver highlights,
+soft spectral accents and Apple-inspired restraint.
 
-![nVibrant Aero demo](screenshots/aero.png)
+![nVibrant Glass demo](screenshots/aero.png)
 
 ## Run on Arch Linux
 

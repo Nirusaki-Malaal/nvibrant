@@ -10,14 +10,14 @@
 
 <img src="https://github.com/user-attachments/assets/962a3f4d-6022-402f-a47b-27aeba595a19"/>
 
-## 🫧 nVibrant Aero GTK interface (this fork)
+## 🫧 nVibrant Glass GTK interface (this fork)
 
-A native GTK 4 colour control panel with a Frutiger Aero theme: aqua glass,
-glossy buttons, per-display vibrance sliders, presets and explicit Apply/Reset.
+A native GTK 4 colour control panel with an Apple-inspired black glass theme: glossy dark panels,
+silver controls, per-display vibrance sliders, presets and explicit Apply/Reset.
 
 **[Setup and usage → GUI.md](GUI.md)** · Preview: `python3 -m nvibrant.gui --demo`
 
-![nVibrant Aero](screenshots/aero.png)
+![nVibrant Glass](screenshots/aero.png)
 
 ## 🔥 Description
 

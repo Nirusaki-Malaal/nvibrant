@@ -1,60 +1,67 @@
+/* App-scoped dark glass. Highlights are drawn locally, without compositor blur. */
 window.aero {
-  color: #16445a;
-  background: radial-gradient(ellipse at 95% 5%, #fcffe7 0%, rgba(252,255,231,0) 75%),
-              linear-gradient(145deg, #d9f6ff 0%, #bcece9 56%, #d5efc8 100%);
-  font-family: Cantarell, sans-serif;
+  color: #f3f4f7;
+  background: radial-gradient(ellipse at 10% 0%, rgba(87,104,133,.24), rgba(87,104,133,0) 65%),
+              radial-gradient(ellipse at 100% 80%, rgba(60,67,87,.16), rgba(60,67,87,0) 70%),
+              linear-gradient(150deg, #151619, #08090b 70%, #111216);
+  font-family: Inter, "SF Pro Display", Cantarell, sans-serif;
 }
 .aero headerbar {
-  background: linear-gradient(to bottom, rgba(255,255,255,.94), rgba(232,251,255,.7));
-  border-bottom: 1px solid rgba(255,255,255,.9);
-  box-shadow: 0 2px 12px rgba(27,98,122,.08);
-  color: #22566b;
+  color: #e7e8ed;
+  background: linear-gradient(to bottom, rgba(47,49,55,.98), rgba(24,25,29,.96));
+  border-bottom: 1px solid rgba(255,255,255,.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 4px 20px rgba(0,0,0,.24);
 }
-.aero .wordmark { font-weight: 700; letter-spacing: 1px; }
-.aero .headline { font-size: 29px; font-weight: 800; letter-spacing: -1px; color: #164858; }
-.aero .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: 2px; color: #35716e; }
-.aero .subtitle { font-size: 14px; color: #476c73; }
-.aero .muted { font-size: 11px; color: #4a6b74; }
+.aero .wordmark { font-size: 12px; font-weight: 600; letter-spacing: 1px; }
+.aero .headline { font-size: 29px; font-weight: 700; letter-spacing: -1px; color: #f8f9fc; }
+.aero .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #acb2c2; }
+.aero .subtitle { font-size: 14px; color: #a7abb8; }
+.aero .muted { font-size: 11px; color: #a8acba; }
 .aero .glass-card {
   padding: 22px;
-  border-radius: 22px;
-  border: 1px solid rgba(255,255,255,.98);
-  background: linear-gradient(135deg, rgba(255,255,255,.87), rgba(239,255,255,.60));
-  box-shadow: 0 8px 20px rgba(35,113,125,.09), inset 0 1px 0 white;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: radial-gradient(ellipse at 0% 0%, rgba(255,255,255,.09), rgba(255,255,255,0) 70%),
+              linear-gradient(150deg, rgba(52,54,62,.86), rgba(24,25,30,.94) 65%, rgba(33,35,41,.9));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(255,255,255,.025),
+              0 12px 26px rgba(0,0,0,.25);
 }
-.aero .card-title { font-size: 17px; font-weight: 700; }
-.aero .value { font-size: 28px; font-weight: 300; color: #087b8b; }
+.aero .card-title { font-size: 17px; font-weight: 600; color: #f3f4f8; }
+.aero .value { font-size: 28px; font-weight: 300; color: #e3e9fa; }
 .aero button {
   padding: 8px 16px;
   border-radius: 999px;
-  color: #245b68;
-  border: 1px solid rgba(92,161,172,.38);
-  background: linear-gradient(to bottom, white, #e1f4f5);
-  box-shadow: inset 0 1px 0 white, 0 2px 3px rgba(23,95,111,.06);
+  color: #e6e8ef;
+  border: 1px solid rgba(255,255,255,.16);
+  background: linear-gradient(to bottom, #484a52 0%, #34363d 48%, #292b32 51%, #30323a 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 3px 6px rgba(0,0,0,.22);
   text-shadow: none;
+  transition: 140ms ease;
 }
-.aero button:hover { background: linear-gradient(to bottom, #fff, #c9f3eb); border-color: #57b8b1; }
-.aero button:active { background: #c4ece9; }
+.aero button:hover { background: linear-gradient(to bottom, #565964, #383b45); border-color: rgba(255,255,255,.30); }
+.aero button:active { background: #24262d; box-shadow: inset 0 2px 5px rgba(0,0,0,.35); }
+.aero button:focus-visible { outline: 2px solid #9fb9ff; outline-offset: 3px; }
 .aero button.suggested-action {
-  color: white;
+  color: #15161b;
   font-weight: 700;
-  border-color: #098c96;
-  background: linear-gradient(to bottom, #55d7cc 0%, #13a9b3 48%, #008e9c 50%, #17a3b0 100%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 3px 8px rgba(0,119,140,.2);
+  border-color: #ebedf6;
+  background: linear-gradient(to bottom, #ffffff 0%, #e8ebf4 48%, #cfd5e3 51%, #e1e6f1 100%);
+  box-shadow: inset 0 1px 0 white, 0 3px 14px rgba(182,201,255,.14);
 }
-.aero button.suggested-action:hover { background: linear-gradient(to bottom, #62e8d5, #0095a7); }
-.aero button:disabled { opacity: .5; }
+.aero button.suggested-action:hover { background: linear-gradient(to bottom, #ffffff, #d5e2ff); }
+.aero button:disabled { opacity: .45; }
 .aero scale { padding: 10px 0; }
-.aero scale trough { min-height: 8px; border-radius: 99px; background: #cde4e6; border: 1px solid #bdd9dd; }
-.aero scale highlight { background: linear-gradient(to right, #81cbd8, #1ebbb3); border-radius: 99px; }
-.aero scale slider { min-width: 22px; min-height: 22px; border-radius: 100%; background: linear-gradient(to bottom, white, #dbf8f6); border: 1px solid #64b5bb; box-shadow: 0 2px 4px rgba(0,87,110,.2); }
-.aero .status { padding: 12px 16px; border-radius: 12px; background: rgba(255,255,255,.5); color: #21656b; font-size: 12px; }
-.aero .error { color: #9d3535; }
-.aero spinbutton { border-radius: 10px; background: rgba(255,255,255,.7); color: #16445a; }
-.aero expander { color: #355e69; }
-
-.aero headerbar button { padding: 5px; min-width: 24px; min-height: 24px; color: #245b68; }
-.aero headerbar button image { color: #245b68; }
+.aero scale trough { min-height: 7px; border-radius: 99px; background: #14151a; border: 1px solid #41434d; box-shadow: inset 0 1px 3px rgba(0,0,0,.5); }
+.aero scale highlight { background: linear-gradient(to right, #7e8da9, #cbd9f7); border-radius: 99px; }
+.aero scale slider { min-width: 22px; min-height: 22px; border-radius: 100%; background: linear-gradient(to bottom, #ffffff, #cdd4e3); border: 1px solid #edf1f9; box-shadow: inset 0 1px 0 white, 0 2px 6px rgba(0,0,0,.5); }
+.aero scale:focus-visible slider { outline: 2px solid #9fb9ff; outline-offset: 3px; }
+.aero .status { padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.045); color: #b9c5de; font-size: 12px; }
+.aero .error { color: #ffb2b2; }
+.aero spinbutton { border: 1px solid #50535e; border-radius: 12px; background: #202127; color: #f2f3f7; }
+.aero spinbutton text { color: #f2f3f7; background: transparent; }
 .aero spinbutton button { padding: 3px; min-width: 18px; min-height: 18px; }
-.aero spinbutton text { color: #16445a; }
-.aero scrollbar slider { min-width: 6px; min-height: 6px; }
+.aero expander { color: #b7bdcc; }
+.aero headerbar button { padding: 5px; min-width: 24px; min-height: 24px; color: #d5d9e4; background: rgba(255,255,255,.06); box-shadow: none; }
+.aero headerbar button:hover { background: rgba(255,255,255,.15); }
+.aero headerbar button image { color: #d5d9e4; }
+.aero scrollbar slider { min-width: 6px; min-height: 6px; background: #555965; }

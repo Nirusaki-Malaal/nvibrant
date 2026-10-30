@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=nVibrant Aero
-Comment=Let your colours bloom — NVIDIA digital vibrance
+Name=nVibrant Glass
+Comment=Fine-tune your colours — NVIDIA digital vibrance
 Exec=nvibrant-gtk
 Icon=preferences-desktop-display
 Terminal=false
