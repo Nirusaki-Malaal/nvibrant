@@ -1,3 +1,7 @@
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
 #include <cstring>
 #include <vector>
 #include <fstream>
@@ -60,7 +64,10 @@ int get_int(int argc, char* argv[], int index, int min, int max, int fallback) {
 // ----------------------------------------------------------------------------|
 
 int main(int argc, char *argv[]) {
-    printf("Driver version: (%s)\n", NVIDIA_DRIVER_VERSION);
+    const bool listOnly = argc == 2 && strcmp(argv[1], "--list-json") == 0;
+    if (!listOnly) printf("Driver version: (%s)\n", NVIDIA_DRIVER_VERSION);
+    std::string ports;
+    bool failed = false;
 
     // Open the nvidia-modeset file descriptor
     int modeset = open("/dev/nvidia-modeset", O_RDWR);
@@ -92,11 +99,12 @@ int main(int argc, char *argv[]) {
 
     // Iterate on all displays in the system, querying their info
     for (NvU32 display=0; display<allocDevice.reply.numDisps; display++) {
-        printf("\nDisplay %d:\n", display);
-        NvKmsQueryDispParams queryDisp;
+        if (!listOnly) printf("\nDisplay %d:\n", display);
+        NvKmsQueryDispParams queryDisp{};
         queryDisp.request.deviceHandle = allocDevice.reply.deviceHandle;
         queryDisp.request.dispHandle   = allocDevice.reply.dispHandles[display];
         if (easy_nvkms_ioctl(modeset, NVKMS_IOCTL_QUERY_DISP, &queryDisp) < 0) {
+            failed = true;
             printf(" QueryDisp ioctl failed\n");
             continue;
         }
@@ -106,22 +114,36 @@ int main(int argc, char *argv[]) {
             index++;
 
             // Get 'immutable' static data (such as connector type)
-            NvKmsQueryConnectorStaticDataParams staticData;
+            NvKmsQueryConnectorStaticDataParams staticData{};
             staticData.request.deviceHandle    = allocDevice.reply.deviceHandle;
             staticData.request.dispHandle      = allocDevice.reply.dispHandles[display];
             staticData.request.connectorHandle = queryDisp.reply.connectorHandles[connector];
             if (easy_nvkms_ioctl(modeset, NVKMS_IOCTL_QUERY_CONNECTOR_STATIC_DATA, &staticData) < 0) {
+                failed = true;
                 printf("QueryConnector ioctl failed\n");
                 continue;
             }
 
             // Get the 'dynamic' data (is connected?)
-            NvKmsQueryDpyDynamicDataParams dynamicData;
+            NvKmsQueryDpyDynamicDataParams dynamicData{};
             dynamicData.request.deviceHandle    = allocDevice.reply.deviceHandle;
             dynamicData.request.dispHandle      = allocDevice.reply.dispHandles[display];
             dynamicData.request.dpyId           = staticData.reply.dpyId;
             if (easy_nvkms_ioctl(modeset, NVKMS_IOCTL_QUERY_DPY_DYNAMIC_DATA, &dynamicData) < 0) {
+                failed = true;
                 printf("QueryDpy ioctl failed\n");
+                continue;
+            }
+
+            // Read-only discovery: never issue SET_DPY_ATTRIBUTE in this branch.
+            if (listOnly) {
+                if (!ports.empty()) ports += ",";
+                ports += "{\"index\":" + std::to_string(index - 1)
+                    + ",\"display\":" + std::to_string(display)
+                    + ",\"connector\":" + std::to_string(connector)
+                    + ",\"type\":\"" + (staticData.reply.type == NVKMS_CONNECTOR_TYPE_HDMI ? "HDMI" :
+                        staticData.reply.type == NVKMS_CONNECTOR_TYPE_DP ? "DisplayPort" : "Display")
+                    + "\",\"connected\":" + (dynamicData.reply.connected ? "true" : "false") + "}";
                 continue;
             }
 
@@ -142,7 +164,7 @@ int main(int argc, char *argv[]) {
             printf(") • ");
 
             // Make the request to set attribute for this monitor
-            NvKmsSetDpyAttributeParams setDpyAttr;
+            NvKmsSetDpyAttributeParams setDpyAttr{};
             setDpyAttr.request.deviceHandle = allocDevice.reply.deviceHandle;
             setDpyAttr.request.dispHandle   = allocDevice.reply.dispHandles[display];
             setDpyAttr.request.dpyId        = staticData.reply.dpyId;
@@ -173,6 +195,7 @@ int main(int argc, char *argv[]) {
             }
 
             if (easy_nvkms_ioctl(modeset, NVKMS_IOCTL_SET_DPY_ATTRIBUTE, &setDpyAttr) < 0) {
+                failed = true;
                 printf("Failed\n");
                 continue;
             }
@@ -181,12 +204,13 @@ int main(int argc, char *argv[]) {
     }
 
     // Deallocate device just in case it's not gc-ed on the driver side
-    struct NvKmsFreeDeviceParams freeDevice;
+    struct NvKmsFreeDeviceParams freeDevice{};
     freeDevice.request.deviceHandle = allocDevice.reply.deviceHandle;
     if (easy_nvkms_ioctl(modeset, NVKMS_IOCTL_FREE_DEVICE, &freeDevice) < 0) {
         printf("Failed to free device handle\n");
         return 1;
     }
 
-    return 0;
+    if (listOnly && !failed) printf("{\"ports\":[%s]}\n", ports.c_str());
+    return failed ? 1 : 0;
 }

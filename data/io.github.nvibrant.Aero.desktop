@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=nVibrant Aero
+Comment=Let your colours bloom — NVIDIA digital vibrance
+Exec=nvibrant-gtk
+Icon=preferences-desktop-display
+Terminal=false
+Categories=Settings;HardwareSettings;
+Keywords=NVIDIA;Vibrance;Display;Color;

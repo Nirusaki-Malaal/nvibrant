@@ -1,0 +1,4 @@
+#!/bin/sh
+# Run from the checkout without installing into the system Python.
+cd -- "$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)" || exit 1
+exec /usr/bin/python3 -m nvibrant.gui "$@"

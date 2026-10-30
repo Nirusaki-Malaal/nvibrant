@@ -14,6 +14,7 @@ GitHub = "https://github.com/Tremeschin/nvibrant"
 
 [project.scripts]
 nvibrant = "nvibrant.__main__:main"
+nvibrant-gtk = "nvibrant.gui:main"
 
 [build-system]
 requires = ["hatchling"]
