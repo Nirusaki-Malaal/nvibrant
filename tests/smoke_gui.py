@@ -1,6 +1,7 @@
 """Run under xvfb-run; exercise real GTK widgets with a fake backend."""
 import sys
 import time
+import threading
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import gi
@@ -31,6 +32,52 @@ def exercise():
     assert len(window.scales) == 2
     window.scales[0].set_value(512)
     assert 'Pending' in window.status.get_text()
+    # A slow refresh must retain the same widgets, layout and pending values.
+    card = window.cards.get_first_child()
+    scale = window.scales[0]
+    release = threading.Event()
+    discover = window.backend.discover
+    def slow_discover():
+        assert release.wait(3), 'Test scan was never released'
+        return discover()
+    window.backend.discover = slow_discover
+    window.refresh.emit('clicked')
+    assert window.busy
+    assert window.cards.get_first_child() is card
+    assert window.cards.get_sensitive()
+    assert not window.apply_button.get_sensitive()
+    scale.set_value(768)
+    release.set()
+    settle()
+    assert window.cards.get_first_child() is card
+    assert window.scales[0] is scale
+    assert scale.get_value() == 768
+    assert window.dirty
+    # A real topology change rebuilds once and retains unchanged output values.
+    window.backend.discover = lambda: discover() + [
+        dict(index=3, display=0, connector=3, type='DisplayPort', connected=True)]
+    window.discover()
+    settle()
+    assert set(window.scales) == {0, 1, 3}
+    assert window.scales[0].get_value() == 768
+    assert window.scales[3].get_value() == 0
+    window.backend.discover = discover
+    window.discover()
+    settle()
+    assert set(window.scales) == {0, 1}
+    assert window.scales[0].get_value() == 768
+    card = window.cards.get_first_child()
+    # Failed scans retain the layout but disable all stale display controls.
+    window.backend.discover = lambda: (_ for _ in ()).throw(RuntimeError('Refresh failed'))
+    window.discover()
+    settle()
+    assert window.cards.get_first_child() is card
+    assert not window.cards.get_sensitive()
+    assert not window.apply_button.get_sensitive()
+    window.backend.discover = discover
+    window.discover()
+    settle()
+    assert window.cards.get_sensitive()
     window.apply()
     settle()
     assert 'not changed' in window.status.get_text()

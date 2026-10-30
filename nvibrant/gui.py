@@ -131,15 +131,16 @@ class AeroWindow(Gtk.ApplicationWindow):
         # Let an in-flight driver request report its result before closing.
         return self.busy
 
-    def set_busy(self, busy):
+    def set_busy(self, busy, lock_cards=True):
         self.busy = busy
-        for widget in (self.refresh, self.gpu, self.cards, self.apply_button, self.reset):
+        for widget in (self.refresh, self.gpu, self.apply_button, self.reset):
             widget.set_sensitive(not busy)
+        self.cards.set_sensitive(bool(self.scales) and (not busy or not lock_cards))
         self.apply_button.set_sensitive(not busy and bool(self.scales))
         self.reset.set_sensitive(not busy and bool(self.scales))
 
-    def task(self, work, done):
-        self.set_busy(True)
+    def task(self, work, done, on_error=None, lock_cards=True):
+        self.set_busy(True, lock_cards=lock_cards)
         def worker():
             try:
                 result, error = work(), None
@@ -147,14 +148,16 @@ class AeroWindow(Gtk.ApplicationWindow):
                 result, error = None, str(exc)
             GLib.idle_add(finish, result, error)
         def finish(result, error):
-            self.set_busy(False)
             if error:
+                if on_error:
+                    on_error()
                 self.status.set_text('Could not complete the request. Expand Details below.')
                 self.status.add_css_class('error')
                 self.log.set_text(error)
             else:
                 self.status.remove_css_class('error')
                 done(result)
+            self.set_busy(False)
             return GLib.SOURCE_REMOVE
         threading.Thread(target=worker, daemon=True).start()
 
@@ -171,36 +174,46 @@ class AeroWindow(Gtk.ApplicationWindow):
     def discover(self):
         if self.busy:
             return
-        # Invalidate old GPU controls even if the new discovery fails.
-        self.scales = {}
-        self.ports = []
-        while child := self.cards.get_first_child():
-            self.cards.remove(child)
+        # Keep the visible cards (and their pending values) during read-only scans.
         self.backend.gpu = self.gpu.get_value_as_int()
         self.status.set_text('Finding your displays…')
-        self.task(self.backend.discover, self.show_ports)
+        def failed():
+            # Preserve layout, but make stale controls unusable until a good scan.
+            self.scales = {}
+            self.ports = []
+        self.task(self.backend.discover, self.show_ports, on_error=failed, lock_cards=False)
 
     def show_ports(self, ports):
+        if ports != self.ports or not self.scales:
+            previous = {p['index']: p for p in self.ports}
+            values = {index: round(scale.get_value()) for index, scale in self.scales.items()}
+            was_dirty = self.dirty
+            self.scales = {}
+            while child := self.cards.get_first_child():
+                self.cards.remove(child)
+            retained = False
+            for port in ports:
+                if port['connected']:
+                    keep = previous.get(port['index']) == port and port['index'] in values
+                    self.add_card(port, values[port['index']] if keep else 0)
+                    retained |= keep
+            self.dirty = was_dirty and retained
         self.ports = ports
-        for port in ports:
-            if port['connected']:
-                self.add_card(port)
-        self.dirty = False
-        self.set_busy(False)
-        self.status.set_text('DEMO MODE • No hardware changes will be made.' if self.demo else
-                             ('Ready. Choose your colours below.' if self.scales else
-                              'No connected NVIDIA displays. Try another GPU index or check hybrid graphics.'))
+        self.status.set_text('Pending changes preserved • Click Apply colours when ready.' if self.dirty else
+                             ('DEMO MODE • No hardware changes will be made.' if self.demo else
+                              ('Ready. Choose your colours below.' if self.scales else
+                               'No connected NVIDIA displays. Try another GPU index or check hybrid graphics.')))
 
-    def add_card(self, port):
+    def add_card(self, port, initial_value=0):
         card = box(True, 14); card.add_css_class('glass-card')
         top = box()
         title = box(True, 3)
         title.append(label(f"▣  {port['type']} · Port {port['connector'] + 1}", 'card-title'))
         title.append(label(f"GPU {self.backend.gpu}  /  Display {port['display']}  /  Output {port['index'] + 1}", 'muted'))
         title.set_hexpand(True); top.append(title)
-        value = label('0', 'value'); top.append(value); card.append(top)
+        value = label(f'{initial_value:+d}' if initial_value else '0', 'value'); top.append(value); card.append(top)
         scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, -1024, 1023, 1)
-        scale.set_value(0); scale.set_draw_value(False); scale.set_hexpand(True)
+        scale.set_value(initial_value); scale.set_draw_value(False); scale.set_hexpand(True)
         scale.set_tooltip_text('Digital vibrance: −1024 grayscale, 0 natural, 1023 maximum')
         scale.update_property([Gtk.AccessibleProperty.LABEL],
                               [f"Vibrance for {port['type']} output {port['index'] + 1}"])

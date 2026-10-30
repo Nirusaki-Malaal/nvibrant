@@ -52,7 +52,8 @@ Python packaging; package names vary. Run with the distro Python that provides
 4. **Reset to natural**, then Apply, restores zero vibrance to connected outputs
    on the selected GPU.
 5. For a second NVIDIA GPU, change the index and click **Refresh**. Refresh
-   discards pending choices and disables stale controls if detection fails.
+   preserves pending choices for unchanged outputs, keeps cards visible during
+   detection, and disables stale controls if detection fails.
 
 Values range from −1024 (grayscale) through 0 (natural) to 1023 (maximum).
 Initial sliders show **pending zero values**, not a reading of current hardware
