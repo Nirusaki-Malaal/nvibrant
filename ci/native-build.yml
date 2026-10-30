@@ -1,0 +1,58 @@
+name: Native Linux builds
+on:
+  push:
+    paths:
+      - 'Makefile'
+      - 'build.sh'
+      - 'scripts/**'
+      - 'meson*'
+      - 'nvibrant/**'
+      - 'tests/**'
+      - 'data/**'
+      - '.github/workflows/native-build.yml'
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-and-install:
+    name: Linux ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86-64
+          - runner: ubuntu-24.04-arm
+            arch: ARM64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build and GTK dependencies
+        run: |
+          bash build.sh deps
+          sudo apt-get install -y xvfb xauth desktop-file-utils shellcheck
+      - name: Check installer syntax
+        run: |
+          bash -n build.sh
+          shellcheck build.sh
+      - name: Build natively against the pinned NVIDIA driver headers
+        run: make DRIVER_VERSION="$(cat data/nvidia-driver-version)"
+      - name: Test Python and GTK behavior
+        run: |
+          make test
+          make test-gui
+      - name: Verify installed payload and removal
+        shell: bash
+        run: |
+          set -euo pipefail
+          prefix="$RUNNER_TEMP/install prefix"
+          make install PREFIX="$prefix" DRIVER_VERSION="$(cat data/nvidia-driver-version)"
+          "$prefix/bin/nvibrant-gtk" --help
+          file "$prefix/lib/nvibrant/build/nvibrant"
+          python3 -c 'import pathlib, platform, struct, sys; data = pathlib.Path(sys.argv[1]).read_bytes(); expected = {"x86_64": 62, "aarch64": 183}[platform.machine()]; assert data[:4] == b"\x7fELF" and struct.unpack("<H", data[18:20])[0] == expected' "$prefix/lib/nvibrant/build/nvibrant"
+          desktop-file-validate "$prefix/share/applications/io.github.nvibrant.Aero.desktop"
+          NVIBRANT_TEST_APP="$prefix/lib/nvibrant" make test-gui
+          make uninstall PREFIX="$prefix"
+          test ! -e "$prefix/bin/nvibrant-gtk"

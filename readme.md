@@ -1,23 +1,95 @@
-<div align="center">
-  <h1>nvibrant</h1>
-  <p>Nvidia Digital Vibrance and Dithering on Wayland</p>
-  <a href="https://pypi.org/project/nvibrant/"><img src="https://img.shields.io/pypi/v/nvibrant?label=PyPI&color=blue"></a>
-  <a href="https://pypi.org/project/nvibrant/"><img src="https://img.shields.io/pypi/dw/nvibrant?label=Installs&color=blue"></a>
-  <a href="https://github.com/Tremeschin/nvibrant/releases/"><img src="https://img.shields.io/github/v/release/Tremeschin/nvibrant?label=Release&color=light-green"></a>
-  <a href="https://github.com/Tremeschin/nvibrant/releases/"><img src="https://img.shields.io/github/downloads/Tremeschin/nvibrant/total?label=Downloads&color=light-green"></a>
-  <a href="https://discord.gg/KjqvcYwRHm"><img src="https://img.shields.io/discord/1184696441298485370?label=Discord&style=flat&color=purple"></a>
-</div>
+# nVibrant Glass
 
-<img src="https://github.com/user-attachments/assets/962a3f4d-6022-402f-a47b-27aeba595a19"/>
+A native GTK 4 control panel for NVIDIA digital vibrance on Linux, with glossy
+black glass panels, per-display sliders, presets, and explicit Apply/Reset.
 
-## 🫧 nVibrant Glass GTK interface (this fork)
+![nVibrant Glass — glossy black GTK interface](screenshots/aero.png)
 
-A native GTK 4 colour control panel with an Apple-inspired black glass theme: glossy dark panels,
-silver controls, per-display vibrance sliders, presets and explicit Apply/Reset.
+## Install with curl
 
-**[Setup and usage → GUI.md](GUI.md)** · Preview: `python3 -m nvibrant.gui --demo`
+The same script builds **natively on x86-64 and ARM64 Linux**. It checks your
+architecture, selects headers for the running NVIDIA driver (or the pinned tag
+when building without a GPU), compiles locally, and installs into `~/.local`.
 
-![nVibrant Glass](screenshots/aero.png)
+```bash
+curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/codex/frutiger-aero-gtk/build.sh | bash -s -- install --install-deps
+```
+
+`--install-deps` opts into installing system packages and may invoke `sudo`.
+Omit it if dependencies are already installed. Dependency installation supports
+Debian/Ubuntu, Arch, Fedora, and openSUSE; on other Linux distributions, install
+the dependencies manually and run the script without that flag.
+
+Launch from the app menu or run:
+
+```bash
+~/.local/bin/nvibrant-gtk
+```
+
+You can also save and inspect the script before running it:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/codex/frutiger-aero-gtk/build.sh -o nvibrant-build.sh
+bash nvibrant-build.sh install --install-deps
+```
+
+Choose a custom prefix or a driver header version:
+
+```bash
+bash nvibrant-build.sh install --prefix "$HOME/.local" --driver-version 615.78.08
+```
+
+ARM64 support means native Linux builds for ARM64 systems with a compatible
+NVIDIA driver controlling the display. This does not add support for macOS,
+Apple GPUs, integrated Intel/AMD displays, or every Jetson driver stack.
+
+## Build with Make
+
+```bash
+git clone --branch codex/frutiger-aero-gtk https://github.com/Nirusaki-Malaal/nvibrant.git
+cd nvibrant
+make deps           # optional: install distro build and GTK dependencies
+make                # native Meson/Ninja build
+make install        # GUI, native CLI and desktop launcher in ~/.local
+```
+
+The build script fetches the required NVIDIA headers automatically; cloning all
+submodules is unnecessary. Re-running install upgrades this installation.
+
+| Command | Purpose |
+| --- | --- |
+| `make check` | Check compiler, Meson, Ninja and Python/GTK dependencies |
+| `make` | Build the native backend |
+| `make install PREFIX=/absolute/path` | Install to a custom prefix |
+| `make uninstall PREFIX=/absolute/path` | Remove that installation |
+| `make test` | Run backend and installer regression tests |
+| `make test-gui` | Run GTK smoke checks under Xvfb |
+| `make clean` | Clean compiled output |
+
+Variables: `PREFIX`, `BUILD_DIR` (absolute), `DRIVER_VERSION`, `JOBS`, `PYTHON`.
+The Makefile delegates to `build.sh`; direct usage works too:
+
+```bash
+./build.sh build --jobs 4
+./build.sh install
+./build.sh uninstall
+./build.sh --help
+```
+
+To preview the GUI without accessing NVIDIA hardware:
+
+```bash
+./run-gtk --demo
+# Or, after installation:
+~/.local/bin/nvibrant-gtk --demo
+```
+
+**[Detailed usage and compatibility → GUI.md](GUI.md)** ·
+**[Build/install details → BUILDING.md](BUILDING.md)**
+
+This is a GUI fork of [Tremeschin/nvibrant](https://github.com/Tremeschin/nvibrant).
+The original NVIDIA ioctl backend and CLI remain available; the upstream PyPI
+package is separate from this fork's GTK installer.
 
 ## 🔥 Description
 

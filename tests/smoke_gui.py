@@ -1,9 +1,12 @@
 """Run under xvfb-run; exercise real GTK widgets with a fake backend."""
 import sys
+import os
 import time
 import threading
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+source_root = Path(__file__).resolve().parents[1]
+package_root = Path(os.environ.get('NVIBRANT_TEST_APP', source_root)).resolve()
+sys.path.insert(0, str(package_root))
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Gdk', '4.0')
@@ -14,7 +17,7 @@ from nvibrant.gui import AeroWindow
 app = Gtk.Application(application_id='io.github.nvibrant.Smoke')
 app.register(None)
 css = Gtk.CssProvider()
-css.load_from_path(str(Path(__file__).resolve().parents[1] / 'nvibrant/assets/aero.css'))
+css.load_from_path(str(package_root / 'nvibrant/assets/aero.css'))
 Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 app.connect('activate', lambda *_: None)
 window = AeroWindow(app, demo=True)

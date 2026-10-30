@@ -1,0 +1,1 @@
+option('nvidia_headers', type: 'string', value: 'open-gpu', description: 'NVIDIA open-gpu-kernel-modules source directory (must match the target driver)')

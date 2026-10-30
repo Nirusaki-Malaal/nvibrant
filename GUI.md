@@ -5,43 +5,34 @@ soft spectral accents and Apple-inspired restraint.
 
 ![nVibrant Glass demo](screenshots/aero.png)
 
-## Run on Arch Linux
+## Build and install
 
-Install the native tools and GTK Python bindings:
+Use the [curl installer or Makefile](readme.md#install-with-curl). Both compile
+natively on x86-64 and ARM64 Linux and install the GUI, native backend and desktop
+launcher without modifying Python site-packages.
 
-```sh
-sudo pacman -S --needed gtk4 python-gobject python-cairo python-packaging meson ninja gcc git
-```
-
-Clone **this fork**, including NVIDIA's headers, and build the native backend:
+From this checkout:
 
 ```sh
-git clone --branch codex/frutiger-aero-gtk --recurse-submodules https://github.com/Nirusaki-Malaal/nvibrant.git
-cd nvibrant
-meson setup build --buildtype=release
-meson compile -C build
-./run-gtk
+make check
+make
+make install
+~/.local/bin/nvibrant-gtk
 ```
 
-This fork pins NVIDIA headers to **615.78.08**, the version used for hardware
-verification. Use headers matching your NVIDIA driver if discovery reports an
-ioctl/version mismatch. For example (substitute your installed driver version):
+`make deps` installs distro packages if needed. The universal `build.sh` selects
+headers matching the running NVIDIA driver automatically; use
+`make DRIVER_VERSION=615.78.08` to target a particular driver. On a machine without
+a running NVIDIA driver it falls back to `data/nvidia-driver-version`.
+
+Preview without building or accessing hardware:
 
 ```sh
-git -C open-gpu fetch origin tag "$(cat /sys/module/nvidia/version)"
-git -C open-gpu checkout "$(cat /sys/module/nvidia/version)"
-meson compile -C build
+./run-gtk --demo
 ```
 
-To preview the interface without building the backend or accessing hardware:
-
-```sh
-python3 -m nvibrant.gui --demo
-```
-
-Other distributions need GTK 4, PyGObject with Cairo integration, pycairo and
-Python packaging; package names vary. Run with the distro Python that provides
-`gi`, rather than an isolated Python environment without the GTK bindings.
+See [BUILDING.md](BUILDING.md) for custom prefixes, dependencies, uninstalling and
+how the installed payload is laid out.
 
 ## Use
 
@@ -69,10 +60,11 @@ runs off the GTK thread; the window waits for an active request before closing.
 
 ## Desktop launcher
 
-The wheel exposes `nvibrant-gtk`. If using the source checkout instead, create a
-small launcher at `~/.local/bin/nvibrant-gtk` that changes into your checkout and
-executes `/usr/bin/python3 -m nvibrant.gui`. Then copy
-`data/io.github.nvibrant.Aero.desktop` into `~/.local/share/applications/`.
+`make install` and the curl installer create a `nvibrant-gtk` launcher and a
+desktop entry automatically. The default prefix is `~/.local`; add
+`~/.local/bin` to your PATH if you want to launch `nvibrant-gtk` by name.
+Custom prefixes may need their `share` directory added to `XDG_DATA_DIRS` for
+the desktop menu to find the entry.
 
 ## Backend changes
 
