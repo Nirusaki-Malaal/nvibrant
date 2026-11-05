@@ -1,0 +1,27 @@
+[package]
+name = "nvibrant"
+version = "2.0.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+description = "Native Rust NVIDIA digital vibrance control for Linux"
+repository = "https://github.com/Nirusaki-Malaal/nvibrant"
+
+[dependencies]
+anyhow = "1"
+fs2 = "0.4"
+gtk = { package = "gtk4", version = "0.10", features = ["v4_8"] }
+libc = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tempfile = "3"
+
+[build-dependencies]
+bindgen = "0.72"
+
+[profile.dev]
+debug = 0
+
+[profile.release]
+strip = true
+lto = "thin"

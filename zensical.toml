@@ -1,10 +1,10 @@
 [project]
-site_name = "nvibrant"
+site_name = "NVibrant"
 site_author = "Tremeschin"
 site_description = "🟢 Nvidia Digital Vibrance and Dithering on Wayland"
 site_url  = "https://nvibrant.tremeschin.com/"
-repo_url  = "https://github.com/Tremeschin/nvibrant/"
-repo_name = "Tremeschin/nvibrant"
+repo_url  = "https://github.com/Nirusaki-Malaal/nvibrant/"
+repo_name = "Nirusaki-Malaal/nvibrant"
 extra_css = ["main.css"]
 docs_dir  = "website"
 nav = [

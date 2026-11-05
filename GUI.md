@@ -1,119 +1,66 @@
-# nVibrant Glass
+# NVibrant interface
 
-A native GTK 4 interface for nVibrant, styled with glossy black glass panels, silver highlights,
-soft spectral accents and Apple-inspired restraint.
+![NVibrant Rust interface](screenshots/rust.png)
 
-![nVibrant Glass demo](screenshots/aero.png)
+NVibrant is a native Rust/GTK 4 app with a minimal black interface. The heading uses Ubuntu, with a system
+sans-serif fallback. The “N” is green, with a small NVIDIA SVG to the left.
+Panels, controls and slider thumbs have square corners.
+The interface shows displays, sliders, presets, Refresh,
+Reset and Apply. Routine saved-settings text, marketing copy,
+the instruction line, manual GPU selector and old Details & compatibility panel
+have been removed.
 
-## Build and install
+## Controls
 
-Use the [curl installer or Makefile](readme.md#install-with-curl). Both compile
-natively on x86-64 and ARM64 Linux and install the GUI, native backend and desktop
-launcher without modifying Python site-packages.
+- **Refresh** automatically discovers connected displays across all NVIDIA GPUs
+  without changing colours. GPU device minors are read from the NVIDIA driver;
+  there is no manual GPU control. Pending values survive refresh for the same GPU
+  and physical connector.
+- **Natural**, **Fresh**, **Vivid**, **Luminous** select 0, 256, 512 or 768.
+- **Apply** applies the displayed values and saves only after success.
+  The button briefly reads Applied when successful. Errors appear in a dialog.
+- **Reset** selects zero on all displayed outputs; Apply commits it.
 
-From this checkout:
+Opening the app detects NVIDIA screens and loads per-GPU/per-connector preferences, without
+writing to hardware. A failed save is reported separately from a failed hardware
+request. Driver operations run in bounded child processes off the GTK thread;
+closing waits for active work to finish. Each child has a 15-second timeout.
 
-```sh
-make check
+## Preferences and restart restoration
+
+`~/.config/nvibrant/settings.json` is compatible with the previous Python app.
+An absolute `XDG_CONFIG_HOME` overrides the config root. Sliders alone do not
+save, and demo mode neither loads nor writes real preferences. Concurrent saves
+merge each GPU's outputs under a lock and atomically replace the JSON file.
+
+The installer creates `io.github.nvibrant.Aero.Restore.desktop` under the user's
+XDG autostart directory. After desktop login it runs `nvibrant-gtk --restore`
+without opening a window. It retries discovery/driver errors up to 12 times,
+five seconds apart, applies only connected saved connectors and never rewrites
+preferences. Disable it in Startup Applications if desired. Uninstall removes
+the managed entry; upgrades preserve disabled entries.
+
+A compositor without XDG autostart support needs `nvibrant-gtk --restore` in its
+own startup configuration. For sleep or an in-session driver reset, Apply again
+or run that command manually. Remove competing older vibrance startup commands.
+
+## Compatibility
+
+NVIDIA must drive the output directly; an integrated-GPU laptop panel cannot be
+controlled through this backend. Rebuild against matching headers after NVIDIA
+driver changes if discovery reports an ioctl failure. Hardware discovery is
+read-only and partial enumeration fails instead of exposing incomplete controls.
+Restore and Apply match physical connectors and leave other outputs untouched.
+
+## Preview and checks
+
+```bash
 make
-make install
-~/.local/bin/nvibrant-gtk
-```
-
-`make deps` installs distro packages if needed. The universal `build.sh` selects
-headers matching the running NVIDIA driver automatically; use
-`make DRIVER_VERSION=615.78.08` to target a particular driver. On a machine without
-a running NVIDIA driver it falls back to `data/nvidia-driver-version`.
-
-Preview without building or accessing hardware:
-
-```sh
 ./run-gtk --demo
+make test
+make test-gui
 ```
 
-See [BUILDING.md](BUILDING.md) for custom prefixes, dependencies, uninstalling and
-how the installed payload is laid out.
-
-## Use
-
-1. The app discovers NVIDIA outputs **without changing any colours**.
-2. Choose a preset or move each display's slider. Keyboard arrows work too.
-3. Click **Apply colours**. Changes are explicit; moving a slider alone does
-   not change your screen. Successful Apply also saves those values.
-4. **Reset to natural**, then Apply, restores zero vibrance to connected outputs
-   on the selected GPU.
-5. For a second NVIDIA GPU, change the index and click **Refresh**. Refresh
-   preserves pending choices for unchanged outputs, keeps cards visible during
-   detection, and disables stale controls if detection fails.
-
-Values range from −1024 (grayscale) through 0 (natural) to 1023 (maximum).
-On reopening, sliders show the last successfully applied values for each NVIDIA
-GPU/output, and the GPU selector returns to the last successfully applied GPU.
-Outputs without a saved value start at zero. These are saved choices, not a
-reading of current hardware settings. Apply sends every connected output's
-displayed value together.
-
-Preferences live in `~/.config/nvibrant/settings.json` (or under an absolute
-`XDG_CONFIG_HOME`). Only a successful Apply saves them. Unapplied edits, failed
-driver calls and demo previews do not overwrite your saved values. Reset to
-natural is remembered after you click Apply. Different GPU indices and physical
-output connectors have separate values; moving a monitor to another port uses
-that port's preferences.
-
-Installed builds restore saved colours automatically in the background after desktop
-login, including after a reboot. The installer adds an XDG autostart entry at
-`~/.config/autostart/io.github.nvibrant.Aero.Restore.desktop` (or under an absolute
-`XDG_CONFIG_HOME`). Restore retries discovery/driver errors up to 12 times, five
-seconds apart, to allow displays to become ready. Only connected outputs with a
-saved value are changed; new outputs are left untouched. No window is opened and
-preferences are never rewritten by restore. You can run it manually with
-`nvibrant-gtk --restore` or `python3 -m nvibrant.restore` from the checkout.
-
-Opening or refreshing the GUI still does not change hardware settings. After sleep
-or a driver reset during a session, click Apply to restore the effect. Disable the
-login entry in your desktop's Startup Applications settings if desired; upgrades
-preserve that entry, and uninstall removes it. If settings cannot be read or written,
-the status and Details explain the error without claiming they were saved. User
-preferences survive application upgrades and uninstall.
-
-On hybrid laptops, an internal screen driven by the integrated GPU is not
-controllable through nVibrant. Expand Details for backend errors. The GUI never
-asks for sudo or downloads code at launch. A request has a 15 second timeout and
-runs off the GTK thread; the window waits for an active request before closing.
-
-## Desktop launcher
-
-`make install` and the curl installer create a `nvibrant-gtk` launcher and a
-desktop entry automatically. The default prefix is `~/.local`; add
-`~/.local/bin` to your PATH if you want to launch `nvibrant-gtk` by name.
-Custom prefixes may need their `share` directory added to `XDG_DATA_DIRS` for
-the desktop menu to find the entry.
-
-## Backend changes
-
-This fork adds `--list-json`, a read-only operation returning all ports with
-zero-based `index`, `display`, `connector`, `type` and `connected` fields.
-The global index is the positional CLI argument index, including disconnected
-ports and multiple display groups. Discovery skips SET_DPY_ATTRIBUTE entirely.
-Partial enumeration and per-output apply failures return a nonzero exit code.
-
-The GUI deliberately never falls back to `/usr/bin/nvibrant`: upstream parses
-unknown arguments as zero, so using its binary for discovery would reset colours.
-Use this fork's local Meson build or this fork's bundled wheel binaries.
-The original `nvibrant` CLI remains available. A positional `--skip` leaves that
-output untouched; restore uses it for outputs without saved preferences.
-
-## Checks
-
-```sh
-python3 -m unittest discover -s tests -v
-xvfb-run -a env GDK_BACKEND=x11 GSK_RENDERER=cairo python3 tests/smoke_gui.py
-```
-
-The GTK smoke check exercises discovery, sliders, apply/reset, GPU discovery
-failure and recovery using the demo backend; it renders the actual widgets to
-`screenshots/aero.png`. Real hardware discovery can be checked separately:
-
-```sh
-./build/nvibrant --list-json
-```
+The Rust GTK smoke test covers discovery, pending slider preservation, Apply,
+Reset, automatic display detection and preview isolation. See [BUILDING.md](BUILDING.md) for
+build dependencies and installation details.

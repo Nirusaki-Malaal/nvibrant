@@ -1,49 +1,48 @@
-name: release
+name: Rust release
 on:
   workflow_dispatch:
     inputs:
       publish:
         required: true
         type: boolean
-
+        default: false
+permissions:
+  contents: write
 jobs:
-  main:
-    name: Release
-    runs-on: ubuntu-24.04
-    environment: release
-    permissions:
-      id-token: write
-      contents: write
+  build:
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: bash build.sh deps
+      - name: Select stable Rust
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+      - name: Build native Rust executable
+        run: make DRIVER_VERSION="$(cat data/nvidia-driver-version)"
+      - name: Package binary and documentation
+        run: |
+          version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml)
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          mkdir -p dist
+          tar -czf "dist/nvibrant-${version}-linux-${{ matrix.arch }}.tar.gz" -C build nvibrant -C .. readme.md BUILDING.md GUI.md license.txt
+      - uses: actions/upload-artifact@v4
         with:
-          submodules: true
-          fetch-depth: 0
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Get version
-        run: echo "VERSION=$(uv version --short)" >> $GITHUB_ENV
-
-      - name: Make wheel
-        run: uv build --wheel
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: dist
-          path: dist/*
-
-      - name: Publish to PyPI
+          name: nvibrant-linux-${{ matrix.arch }}
+          path: dist/*.tar.gz
+      - name: Publish release asset
         if: ${{ inputs.publish }}
-        run: uv publish
-
-      - name: Create release
-        if: ${{ inputs.publish }}
-        uses: softprops/action-gh-release@v3
-        with:
-          name: Release v${{ env.VERSION }}
-          tag_name: v${{ env.VERSION }}
-          files: dist/*.whl
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "v$VERSION" || gh release create "v$VERSION" --title "NVibrant $VERSION" --notes "Native Rust NVibrant. Build against headers matching your NVIDIA driver for hardware use." || gh release view "v$VERSION"
+          gh release upload "v$VERSION" dist/*.tar.gz --clobber

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# nVibrant Glass: native Linux source builder and curl-compatible installer.
+# NVibrant: native Linux source builder and curl-compatible installer.
 set -Eeuo pipefail
 trap 'printf "nVibrant: command failed (line %s). Installation was not reported as successful.\n" "$LINENO" >&2' ERR
 
@@ -11,15 +11,15 @@ Builds natively on Linux x86_64/amd64 and aarch64/arm64.
 Default action: install. Default prefix: ~/.local. No display settings are changed.
 
   --prefix PATH          Installation prefix (also NVIBRANT_PREFIX)
-  --build-dir PATH       Meson build directory (default: SOURCE/build)
+  --build-dir PATH       Binary output directory (default: SOURCE/build)
   --source-dir PATH      Use an existing checkout instead of downloading one
   --driver-version VER  NVIDIA header tag (default: installed driver, then pinned tag)
   --install-deps         Install dependencies with the system package manager
-  --jobs N               Parallel build jobs (default: Meson's default)
+  --jobs N               Parallel build jobs (default: 2)
   --ref REF              Branch/tag to download (also NVIBRANT_REF)
   -h, --help             Show this help
 
-Environment: NVIBRANT_PYTHON (default /usr/bin/python3), NVIBRANT_PREFIX,
+Environment: NVIBRANT_NVIDIA_HEADERS, NVIBRANT_PREFIX,
 NVIBRANT_REF, XDG_CACHE_HOME. Prefix and build directory must be absolute paths.
 Package installation is opt-in; only that step may use sudo.
 HELP
@@ -42,40 +42,30 @@ install_deps() {
     if [[ $(id -u) != 0 ]]; then need sudo; elevate=(sudo); fi
     if command -v apt-get >/dev/null 2>&1; then
         "${elevate[@]}" apt-get update
-        "${elevate[@]}" apt-get install -y git ca-certificates build-essential meson ninja-build \
-            python3 python3-packaging python3-gi python3-gi-cairo python3-cairo gir1.2-gtk-4.0
+        "${elevate[@]}" apt-get install -y git ca-certificates build-essential cargo rustc clang libclang-dev pkg-config libgtk-4-dev
     elif command -v pacman >/dev/null 2>&1; then
-        "${elevate[@]}" pacman -S --needed --noconfirm git ca-certificates gcc make meson ninja \
-            python python-packaging python-gobject python-cairo gtk4
+        "${elevate[@]}" pacman -S --needed --noconfirm git ca-certificates base-devel rust clang pkgconf gtk4
     elif command -v dnf >/dev/null 2>&1; then
-        "${elevate[@]}" dnf install -y git ca-certificates gcc-c++ make meson ninja-build \
-            python3 python3-packaging python3-gobject python3-cairo gtk4
+        "${elevate[@]}" dnf install -y git ca-certificates gcc make cargo rust clang clang-devel pkgconf-pkg-config gtk4-devel
     elif command -v zypper >/dev/null 2>&1; then
-        "${elevate[@]}" zypper --non-interactive install git ca-certificates gcc-c++ make meson ninja \
-            python3 python3-packaging python3-gobject python3-gobject-Gdk python3-cairo typelib-1_0-Gtk-4_0
+        "${elevate[@]}" zypper --non-interactive install git ca-certificates gcc make cargo rust clang clang-devel pkg-config gtk4-devel
     else
-        die 'No supported package manager found. Install git, a C++ compiler, Meson, Ninja, Python >=3.10, packaging, GTK4, PyGObject and pycairo manually.'
+        die 'No supported package manager found. Install Git, Rust/Cargo >=1.85, clang/libclang, pkg-config and GTK4 development headers manually.'
     fi
 }
 
 check_deps() {
-    need git; need meson; need ninja; need "${CXX:-c++}"
-    [[ -x $python ]] || die "Python interpreter is not executable: $python"
-    "$python" - <<'PY' || die 'Missing Python/GTK dependencies. Run ./build.sh deps or pass --install-deps (use your distro Python).'
-import sys
-assert sys.version_info >= (3, 10), 'Python >= 3.10 required'
-import packaging, cairo, gi
-gi.require_version('Gtk', '4.0')
-gi.require_foreign('cairo')
-from gi.repository import Gtk
-PY
+    need git; need cargo; need rustc; need pkg-config; need clang
+    pkg-config --atleast-version=4.8 gtk4 || die 'GTK >=4.8 development files are required.'
+    printf 'Rust/Cargo and GTK runtime dependencies are ready.\n'
+
 }
 
 get_source() {
     if [[ -z $source_dir && -f ${BASH_SOURCE[0]:-} ]]; then
         local candidate
         candidate=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-        if [[ -f $candidate/meson.build && -f $candidate/scripts/install.py ]]; then
+        if [[ -f $candidate/Cargo.toml && -f $candidate/src/main.rs ]]; then
             source_dir=$candidate
         fi
     fi
@@ -86,7 +76,7 @@ get_source() {
             https://github.com/Nirusaki-Malaal/nvibrant.git "$temporary_source/source"
         source_dir=$temporary_source/source
     fi
-    [[ -f $source_dir/meson.build && -f $source_dir/scripts/install.py ]] || die "Not a nVibrant Glass source directory: $source_dir"
+    [[ -f $source_dir/Cargo.toml && -f $source_dir/src/main.rs ]] || die "Not a NVibrant source directory: $source_dir"
     source_dir=$(cd -- "$source_dir" && pwd)
 }
 
@@ -130,9 +120,9 @@ cleanup() {
 }
 
 main() {
-    local action=install source_dir='' build_dir='' driver_version='' jobs='' headers='' arch=''
+    local action=install source_dir='' build_dir='' driver_version='' jobs=2 headers='' arch=''
     local ref=${NVIBRANT_REF:-main}
-    local prefix=${NVIBRANT_PREFIX:-$HOME/.local} python=${NVIBRANT_PYTHON:-/usr/bin/python3}
+    local prefix=${NVIBRANT_PREFIX:-$HOME/.local}
     local deps=false
     if [[ ${1:-} != -* && -n ${1:-} ]]; then action=$1; shift; fi
     case $action in build|install|uninstall|check|deps) ;; *) usage >&2; die "Unknown action: $action" ;; esac
@@ -155,12 +145,12 @@ main() {
     [[ -z $build_dir || $build_dir == /* ]] || die 'Build directory must be absolute.'
     [[ -z $jobs || $jobs =~ ^[1-9][0-9]*$ ]] || die '--jobs must be a positive integer.'
     architecture
-    printf 'nVibrant Glass · Linux %s · %s\n' "$arch" "$action"
+    printf 'NVibrant · Linux %s · %s\n' "$arch" "$action"
     if [[ $action == deps || $deps == true ]]; then install_deps; fi
     [[ $action != deps ]] || return 0
     if [[ $action == uninstall ]]; then
-        get_source
-        "$python" "$source_dir/scripts/install.py" uninstall --prefix "$prefix"
+        [[ -x $prefix/lib/nvibrant/nvibrant ]] || die 'No Rust NVibrant installation found at this prefix.'
+        "$prefix/lib/nvibrant/nvibrant" --uninstall "$prefix"
         return
     fi
     check_deps
@@ -170,25 +160,19 @@ main() {
         die 'For a downloaded source build, supply --build-dir /absolute/output/path; use install for curl installation.'
     fi
     build_dir=${build_dir:-$source_dir/build}
-    get_headers
-    printf 'Using NVIDIA headers %s from %s\n' "$driver_version" "$headers"
-    local setup_args=()
-    if [[ -f $build_dir/meson-private/coredata.dat ]]; then
-        # Existing pre-installer builds do not yet know the new project option.
-        if "$python" -c 'import json, sys; raise SystemExit(not any(o["name"] == "nvidia_headers" for o in json.load(open(sys.argv[1]))))' "$build_dir/meson-info/intro-buildoptions.json"; then
-            setup_args+=(--reconfigure)
-        else
-            setup_args+=(--wipe)
-        fi
+    if [[ -n ${NVIBRANT_NVIDIA_HEADERS:-} ]]; then
+        headers=$NVIBRANT_NVIDIA_HEADERS
+    else
+        get_headers
     fi
-    meson setup "${setup_args[@]}" "$build_dir" "$source_dir" --buildtype=release "-Dnvidia_headers=$headers"
-    local compile_args=(-C "$build_dir")
-    [[ -z $jobs ]] || compile_args+=(-j "$jobs")
-    meson compile "${compile_args[@]}"
-    [[ -x $build_dir/nvibrant ]] || die 'Build completed without a backend executable.'
+    [[ $headers == /* ]] || headers=$source_dir/$headers
+    printf 'Using NVIDIA headers %s from %s\n' "$driver_version" "$headers"
+    export NVIBRANT_NVIDIA_HEADERS=$headers
+    (cd -- "$source_dir" && cargo build --release --locked --target-dir "$source_dir/target" -j "$jobs")
+    mkdir -p -- "$build_dir"
+    cp -- "$source_dir/target/release/nvibrant" "$build_dir/nvibrant"
     if [[ $action == install ]]; then
-        "$python" "$source_dir/scripts/install.py" install --source "$source_dir" \
-            --build-dir "$build_dir" --prefix "$prefix" --driver-version "$driver_version"
+        "$build_dir/nvibrant" --install "$prefix"
     else
         printf 'Built: %s/nvibrant\n' "$build_dir"
     fi

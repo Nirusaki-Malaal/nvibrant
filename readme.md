@@ -1,120 +1,119 @@
-# nVibrant Glass
+# NVibrant
 
-![nVibrant Glass - Find your spectrum](assets/nvibrant-glass.svg)
+A native **Rust + GTK 4** app for NVIDIA digital vibrance on Linux. An Ubuntu wordmark,
+a minimal black interface with square corners, automatic NVIDIA display detection, per-display sliders
+and four presets. The title pairs a green “N” with a small NVIDIA SVG.
+The entire application, NVIDIA backend, settings store, login restore and installer are Rust.
+There is no Python or C++ application runtime.
 
-A native GTK 4 control panel for NVIDIA digital vibrance on Linux, with glossy
-black glass panels, per-display sliders, presets, and explicit Apply/Reset.
-Successfully applied values and the GPU selection are remembered between launches.
-Installed builds automatically restore saved colours at desktop login after a reboot.
+![NVibrant Rust interface](screenshots/rust.png)
 
-![nVibrant Glass - glossy black GTK interface](screenshots/aero.png)
+## Install
 
-## Install with curl
-
-The same script builds **natively on x86-64 and ARM64 Linux**. It checks your
-architecture, selects headers for the running NVIDIA driver (or the pinned tag
-when building without a GPU), compiles locally, and installs into `~/.local`.
+Build and install natively on **x86-64 or ARM64 Linux**:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/build.sh | bash -s -- install --install-deps
 ```
 
-`--install-deps` opts into installing system packages and may invoke `sudo`.
-Omit it if dependencies are already installed. Dependency installation supports
-Debian/Ubuntu, Arch, Fedora, and openSUSE; on other Linux distributions, install
-the dependencies manually and run the script without that flag.
+The installer selects headers matching your running NVIDIA driver, compiles the
+Rust executable, and installs into `~/.local`. `--install-deps` explicitly opts
+into installing distro packages and may use sudo. Omit it if dependencies are
+already available. GTK 4.8 or newer is required; an NVIDIA driver must drive your
+display directly for hardware controls.
 
-Launch from the app menu or run:
+You need Rust/Cargo >=1.85, Clang/libclang, a C linker,
+`pkg-config`, GTK 4 development headers, Git and Bash. If your distro's Rust is
+older than the locked dependencies require, update the toolchain before building.
+Ubuntu is the preferred font, with Cantarell/sans-serif fallbacks.
+
+From a checkout:
 
 ```bash
+git clone https://github.com/Nirusaki-Malaal/nvibrant.git
+cd nvibrant
+make deps       # Optional: install distro build dependencies
+make check
+make
+make install
 ~/.local/bin/nvibrant-gtk
 ```
 
-You can also save and inspect the script before running it:
+Both Make and the curl installer use `build.sh`. The installed executable embeds
+its theme and icon and runs independently of the checkout. Rust is only needed
+to build; GTK and its shared-library dependencies are needed at runtime.
+
+## Use
+
+1. Choose a preset or move a display's slider.
+2. Click **Apply** to apply and save the selected values.
+3. **Reset** selects zero; click Apply to save the reset.
+4. **Refresh** rescans connected displays across all NVIDIA GPUs automatically.
+
+The heading is simply **NVibrant**. The GPU selector has been removed; connected
+NVIDIA screens are detected automatically. There is no marketing subtitle, instruction
+line, saved-colours status panel, or Details & compatibility section. Errors appear
+in a dialog when needed; Apply briefly confirms success on the button itself.
+Opening and refreshing the window only discover displays and load preferences.
+
+Values range from −1024 (grayscale) through 0 (natural) to 1023 (maximum).
+Successfully applied preferences are saved per GPU and physical output connector
+in `~/.config/nvibrant/settings.json`, or under an absolute `XDG_CONFIG_HOME`.
+**Existing settings from the Python version are read automatically.** Failed
+hardware calls, unapplied edits and demo previews do not overwrite preferences.
+
+Saved colours restore automatically in the background at **desktop login after
+a reboot**, without opening a window. Discovery and driver errors are retried up
+to 12 times, five seconds apart. Only connected outputs with saved values change.
+Disable the `NVibrant saved colours` entry in Startup Applications to opt out;
+upgrades preserve disabled entries. After sleep or an in-session driver reset,
+use Apply or run `nvibrant-gtk --restore`. A compositor that does not run XDG
+autostart entries needs that command added to its own startup configuration.
+
+## CLI
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/build.sh -o nvibrant-build.sh
-bash nvibrant-build.sh install --install-deps
+nvibrant                       # Open the GUI
+nvibrant-gtk --demo             # Preview without hardware or saved settings
+nvibrant --list-all-json        # Auto-detect connected screens across NVIDIA GPUs
+nvibrant --list-json            # Read-only output discovery for one GPU
+nvibrant --gpu 0 --list-json
+nvibrant 512 512                # Positional values, including disconnected ports
+nvibrant --skip 512             # Leave the first output untouched
+nvibrant-gtk --restore          # Restore saved GUI preferences without a window
+ATTRIBUTE=dithering nvibrant 2  # Original attribute controls remain available
+nvibrant --version
 ```
 
-Choose a custom prefix or a driver header version:
+Numeric CLI commands apply directly and do not update GUI preferences. Missing
+positional values retain the original CLI default of natural vibrance; use
+`--skip` for outputs you want to leave untouched. Unknown flags are errors.
+`NVIDIA_GPU` selects the default GPU; explicit `--gpu` takes precedence.
+
+## Build and verify
 
 ```bash
-bash nvibrant-build.sh install --prefix "$HOME/.local" --driver-version 615.78.08
+make test        # Rust settings, restore, CLI and installer tests
+make test-gui    # Real GTK controls with simulated hardware under Xvfb
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+make install PREFIX="$HOME/.local"
+make uninstall
 ```
 
-ARM64 support means native Linux builds for ARM64 systems with a compatible
-NVIDIA driver controlling the display. This does not add support for macOS,
-Apple GPUs, integrated Intel/AMD displays, or every Jetson driver stack.
+Custom builds: `make DRIVER_VERSION=615.78.08 JOBS=2`, or supply an absolute
+`NVIBRANT_NVIDIA_HEADERS` directory. Rebuild after a driver upgrade if ioctl calls
+fail. No system Python packages or NVIDIA kernel drivers are installed by the
+normal build. Uninstall removes the app and its managed desktop/login entries,
+while retaining saved preferences.
 
-## Build with Make
+See [BUILDING.md](BUILDING.md) for architecture, installation layout and build
+options, and [GUI.md](GUI.md) for controls and compatibility.
 
-```bash
-git clone --branch main https://github.com/Nirusaki-Malaal/nvibrant.git
-cd nvibrant
-make deps           # optional: install distro build and GTK dependencies
-make                # native Meson/Ninja build
-make install        # GUI, native CLI and desktop launcher in ~/.local
-```
+## Credits and license
 
-The build script fetches the required NVIDIA headers automatically; cloning all
-submodules is unnecessary. Re-running install upgrades this installation.
-
-| Command | Purpose |
-| --- | --- |
-| `make check` | Check compiler, Meson, Ninja and Python/GTK dependencies |
-| `make` | Build the native backend |
-| `make install PREFIX=/absolute/path` | Install to a custom prefix |
-| `make uninstall PREFIX=/absolute/path` | Remove that installation |
-| `make test` | Run backend and installer regression tests |
-| `make test-gui` | Run GTK smoke checks under Xvfb |
-| `make clean` | Clean compiled output |
-
-Variables: `PREFIX`, `BUILD_DIR` (absolute), `DRIVER_VERSION`, `JOBS`, `PYTHON`.
-The Makefile delegates to `build.sh`; direct usage works too:
-
-```bash
-./build.sh build --jobs 4
-./build.sh install
-./build.sh uninstall
-./build.sh --help
-```
-
-To preview the GUI without accessing NVIDIA hardware:
-
-```bash
-./run-gtk --demo
-# Or, after installation:
-~/.local/bin/nvibrant-gtk --demo
-```
-
-**[Detailed usage and compatibility → GUI.md](GUI.md)** ·
-**[Build/install details → BUILDING.md](BUILDING.md)**
-
-This is a GUI fork of [Tremeschin/nvibrant](https://github.com/Tremeschin/nvibrant).
-The original NVIDIA ioctl backend and CLI remain available; the upstream PyPI
-package is separate from this fork's GTK installer.
-
-## 🔥 Description
-
-NVIDIA GPUs have a nice feature called *Digital Vibrance* that increases the colors saturation of the display. The option is readily available on [nvidia-settings](https://github.com/NVIDIA/nvidia-settings/), but is too coupled with libxnvctrl, making it softly "exclusive" to the X11 display server over wayland; but I paid for my pixels to glow :^)
-
-An interesting observation is that the setting persists after modifying it on X11 and then switching to Wayland. I theorized [(1)](https://github.com/libvibrant/vibrantLinux/issues/27#issuecomment-2729822152) [(2)](https://www.reddit.com/r/archlinux/comments/1gx1hir/comment/mhpe2pk/?context=3) it was possible to call some shared library or interface to configure it directly in their driver, independently of the display server, and indeed, it is possible!
-
-This project uses `nvidia-modeset` and `nvkms` headers found at [nvidia/open-gpu-kernel-modules](https://github.com/NVIDIA/open-gpu-kernel-modules/) to make [ioctl](https://en.wikipedia.org/wiki/Ioctl) calls in the `/dev/nvidia-modeset` device for configuring display attributes.
-
-**Note**: A future intended way will be through [NVML](https://developer.nvidia.com/management-library-nvml), as evident by some [nvidia-settings](https://github.com/NVIDIA/nvidia-settings/blob/6c755d9304bf4761f2b131f0687f0ebd1fcf7cd4/src/libXNVCtrlAttributes/NvCtrlAttributesNvml.c#L1235) comments
-
-<sup><b>❤️ Consider</b> [supporting](https://github.com/sponsors/Tremeschin/) my work, this took 30 hours to figure out, implement, write a website, make it convenient 🫠</sup>
-
-## 📦 Getting Started
-
-<div align="center">
-  <a href="https://nvibrant.tremeschin.com/">
-    <img src="https://github.com/user-attachments/assets/a84ddf9b-b86a-4ce0-89fb-b5b76b14a65c"/>
-  </a>
-  <i>
-    Visit the documentation at
-    <a href="https://nvibrant.tremeschin.com/">https://nvibrant.tremeschin.com/</a>
-  </i>
-</div>
+Based on [Tremeschin/nvibrant](https://github.com/Tremeschin/nvibrant), rewritten
+in Rust for this fork. NVIDIA ABI bindings are generated at build time from the
+[Open GPU Kernel Modules](https://github.com/NVIDIA/open-gpu-kernel-modules) headers.
+NVIDIA logo SVG from [Simple Icons](https://github.com/simple-icons/simple-icons/blob/develop/icons/nvidia.svg);
+NVIDIA is a trademark of NVIDIA Corporation. MIT license for the application; see [license.txt](license.txt).

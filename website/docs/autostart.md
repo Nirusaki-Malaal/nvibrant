@@ -9,7 +9,7 @@ tags:
 - Autostart
 ---
 
-## nVibrant Glass
+## NVibrant Rust
 
 This fork's installer adds a desktop login entry that restores the GUI's last
 successfully applied colours in the background, including after a reboot. No
@@ -21,7 +21,7 @@ desktop's Startup Applications settings to stop automatic restoration. Remove
 older vibrance startup commands if you previously configured them, so they do
 not overwrite the saved colours. See [the GUI guide](https://github.com/Nirusaki-Malaal/nvibrant/blob/main/GUI.md).
 
-## Manual CLI systemd service
+## Legacy upstream CLI systemd service
 
 For simplicity, a Systemd user service running either [`uvx`](https://docs.astral.sh/uv/concepts/tools/) for the latest releases (in case of driver updates), or a [prebuilt binary](../get/actions.md) directly should cover most users, and integrates well with dotfiles.
 

@@ -9,6 +9,12 @@ tags:
 - uv
 ---
 
+!!! note "Rust fork"
+    This page describes the original upstream distribution. This fork is now a
+    native Rust/GTK app; use the [source build](source.md) or the Rust assets from
+    [this fork's releases](https://github.com/Nirusaki-Malaal/nvibrant/releases).
+
+
 !!! success "This is an official release channel for nvibrant"
 
 ## :simple-astral: With uv {#uv}

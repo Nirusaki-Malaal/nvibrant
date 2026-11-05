@@ -1,44 +1,31 @@
 ---
 title: Source Build
 icon: material/git
-description: Build nvibrant from source code using Meson and Ninja to target specific
-  driver versions or use uv build to generate a portable wheel for all drivers.
+description: Build the native Rust NVibrant application with Cargo and matching NVIDIA headers.
 tags:
 - Install
 - Source
 ---
 
-!!! success "This is an official release channel for nvibrant"
+# Build from source
 
-Clone the repository with latest `open-gpu` submodule changes:
+This fork is a native Rust + GTK 4 application. The previous Python/C++ build and
+wheel packaging have been replaced by Cargo and a self-contained Rust executable.
 
-```sh linenums="1"
-git clone https://github.com/Tremeschin/nvibrant && cd nvibrant
-git submodule update --init --remote
+```bash
+git clone https://github.com/Nirusaki-Malaal/nvibrant.git
+cd nvibrant
+make deps
+make check
+make
+make test
+make install
 ```
 
-## Pure C++ {#cpp}
+Headers are selected for the running NVIDIA driver, or the pinned version when
+building without a GPU. Override with `make DRIVER_VERSION=615.78.08` or an absolute
+`NVIBRANT_NVIDIA_HEADERS` checkout. Native x86-64 and ARM64 builds are supported.
 
-From here, you can either build only the C++ part for a target driver:
-
-```sh linenums="1" title="Chose a target driver"
-# Any tag from https://github.com/NVIDIA/open-gpu-kernel-modules/tags
-cd open-gpu && git checkout 575.64.03 && cd ..
-```
-
-```sh linenums="1" title="Configure and compile"
-meson setup --buildtype release ./build
-ninja -C ./build
-```
-
-```sh linenums="1" title="Run the program"
-./build/nvibrant 512 512
-```
-
-## Wheel {#wheel}
-
-Or make a wheel for all drivers at `dist/*` for your host platform:
-
-```sh linenums="1"
-uv build --wheel
-```
+The installed app is independent of the source checkout. See
+[BUILDING.md](https://github.com/Nirusaki-Malaal/nvibrant/blob/main/BUILDING.md)
+for requirements, CLI commands, verification, migration and uninstall.

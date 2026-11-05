@@ -1,159 +1,122 @@
-# Build and installation
+# Building NVibrant in Rust
 
-`build.sh` is the single implementation behind Make and curl installation. It
-builds from source on **Linux x86_64/amd64 or aarch64/arm64**; it does not download
-an x86 binary onto an ARM system or install any NVIDIA kernel driver.
+NVibrant 2 is a Rust application. Cargo builds one executable containing the
+GTK interface, direct NVIDIA ioctl backend, settings persistence, login restore
+and installer. No Python interpreter or separate C++ backend is used.
 
-## Requirements
+## Dependencies
 
-- Bash, Git, a C++ compiler, Meson, Ninja, Python 3.10 or later.
-- Python `packaging`, PyGObject (`gi`) with GTK 4 and Cairo integration, pycairo.
-- A compatible NVIDIA driver driving the display for real hardware controls.
-- Xvfb and xauth for `make test-gui` only.
+- Rust and Cargo >=1.85 (2024 edition).
+- GTK >=4.8 development headers, pkg-config and a system C linker.
+- Clang and libclang for build-time NVIDIA header bindings.
+- Git, Bash and Make; Xvfb/xauth for GUI smoke tests only.
+- A compatible loaded NVIDIA driver for real hardware operations.
 
-Use `make deps` or `./build.sh deps` to install dependencies on Debian/Ubuntu,
-Arch, Fedora or openSUSE. This explicitly opts into system package installation;
-normal builds and user-prefix installs do not invoke sudo.
+`make deps` installs distro packages on Debian/Ubuntu, Arch, Fedora or openSUSE.
+It may use sudo. Other build and user-prefix installation steps run as your user.
+Distro packages can lag behind Rust crate requirements; update Rust if Cargo
+reports an unsupported compiler version. Ubuntu font is optional; GTK falls back
+to Cantarell or the system sans-serif font.
 
-For example, on Arch:
-
-```bash
-sudo pacman -S --needed git gcc make meson ninja python python-packaging python-gobject python-cairo gtk4
-```
-
-On Debian/Ubuntu:
-
-```bash
-sudo apt-get install git build-essential meson ninja-build python3 python3-packaging python3-gi python3-gi-cairo python3-cairo gir1.2-gtk-4.0
-```
-
-Use the distro Python that has `gi` available. The default is `/usr/bin/python3`;
-override with `NVIBRANT_PYTHON=/absolute/python` or `make PYTHON=/absolute/python`.
-The installed launcher records that interpreter.
-
-## Local checkout
+## Build and install
 
 ```bash
 make check
-make JOBS=4
-make install PREFIX="$HOME/.local"
+make JOBS=2
 make test
 make test-gui
+make install PREFIX="$HOME/.local"
 ```
 
-Direct equivalents:
+`build.sh` selects headers in this order: explicit `--driver-version`, the running
+version at `/sys/module/nvidia/version`, then `data/nvidia-driver-version` on
+machines without NVIDIA. An exact matching `open-gpu` submodule is reused;
+otherwise a sparse checkout is cached at
+`${XDG_CACHE_HOME:-~/.cache}/nvibrant/headers/VERSION`.
+
+Automatic GUI discovery reads GPU device minors from `/proc/driver/nvidia/gpus/`,
+then queries connected outputs on each GPU. A single window controls them all;
+GPU indices are exposed only in CLI commands and error diagnostics.
+
+`build.rs` generates ABI structures, enums, ioctl constants and compile-time layout
+assertions from those headers with bindgen. Rust owns file descriptors and frees
+NVIDIA device handles on drop. The only unsafe operation in application code is
+the documented synchronous ioctl boundary. The pinned version is the currently
+tested ABI; other driver versions need their own build and hardware verification.
+
+Override the version or provide a local header checkout:
 
 ```bash
-./build.sh check
-./build.sh build --jobs 4
-./build.sh install --prefix "$HOME/.local"
+make DRIVER_VERSION=615.78.08
+NVIBRANT_NVIDIA_HEADERS=/absolute/open-gpu-source make
 ```
 
-`make` creates `build/nvibrant` by default. A custom `BUILD_DIR` must be absolute;
-`make install BUILD_DIR=/absolute/build` installs the binary from that build.
-`./run-gtk` uses the default `build` directory when running from the checkout.
+Direct Cargo builds use the `open-gpu` directory by default, so initialize its
+pinned submodule first (`git submodule update --init`) or set
+`NVIBRANT_NVIDIA_HEADERS`. `build.sh` fetches headers automatically and does not
+switch your tracked submodule. Cargo uses the committed lockfile. It builds for
+the host architecture; the shell installer accepts Linux x86-64 and ARM64.
 
-## Curl bootstrap
+`BUILD_DIR=/absolute/path` changes where the final executable is copied (default
+`build/nvibrant`). Cargo's intermediate output remains under `target/`.
+`make clean` removes Cargo output. `./run-gtk --demo` launches the built executable.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/build.sh | bash -s -- install --install-deps
-```
-
-The script clones this fork into a temporary directory, builds it, copies the
-complete payload into the chosen prefix, and removes the temporary checkout.
-You may download the script to a file and run it separately as shown in the
-[README](readme.md). `--ref BRANCH_OR_TAG` or `NVIBRANT_REF` chooses another source
-branch/tag in this fork. `--source-dir /checkout` explicitly uses local sources.
-For a downloaded **build-only** run, specify an absolute `--build-dir` so the
-compiled output survives cleanup. Installation is the default action.
-
-## NVIDIA headers
-
-Headers are selected in this order:
-
-1. `--driver-version` / Make's `DRIVER_VERSION` override.
-2. `/sys/module/nvidia/version` from the running driver.
-3. `data/nvidia-driver-version` when building on a system without NVIDIA.
-
-If the local `open-gpu` submodule already has the exact tag and headers, it is
-reused. Otherwise, the script performs a sparse checkout of the matching NVIDIA
-header tag into `${XDG_CACHE_HOME:-~/.cache}/nvibrant/headers/VERSION`. It never
-switches your tracked submodule to another driver version. Failed downloads are
-not marked as ready. Network access is required on the first uncached build.
-
-For drivers whose matching open-gpu header tag is unavailable, choose an available
-compatible version explicitly; hardware compatibility must be checked separately.
-Rebuild and reinstall after a driver upgrade if discovery reports an ioctl error.
-
-For direct Meson users:
-
-```bash
-meson setup build --buildtype=release -Dnvidia_headers=/absolute/open-gpu-source
-meson compile -C build
-```
-
-Use `-Dnvidia_headers=open-gpu` for the submodule in this checkout. Relative paths
-are relative to the source root. Meson's own install target installs only the
-native CLI; use Make or `build.sh install` for the complete GTK application.
+The curl installer downloads this repository into a temporary checkout and builds
+it. `--ref TAG_OR_BRANCH` selects a ref; `--source-dir /checkout` selects existing
+sources. For a downloaded build-only command, specify an absolute `--build-dir`
+so the output survives cleanup. Flags are described by `bash build.sh --help`.
 
 ## Installed layout
 
-With the default prefix `~/.local`:
-
 ```text
-bin/nvibrant-gtk                         GUI launcher
-bin/nvibrant                             Native CLI symlink
-lib/nvibrant/build/nvibrant               Private, driver-matched native backend
-lib/nvibrant/nvibrant/                    Python package and glass theme
-lib/nvibrant/.nvibrant-install.json       Installation/driver metadata
-share/applications/io.github.nvibrant.Aero.desktop
-share/icons/hicolor/scalable/apps/io.github.nvibrant.Aero.svg
+~/.local/lib/nvibrant/nvibrant                  Rust executable, embedded theme/icon
+~/.local/lib/nvibrant/.nvibrant-install.json    Installation metadata
+~/.local/lib/nvibrant/license.txt
+~/.local/bin/nvibrant                          Symlink to executable
+~/.local/bin/nvibrant-gtk                      Symlink to executable
+~/.local/share/applications/io.github.nvibrant.Aero.desktop
+~/.local/share/icons/hicolor/scalable/apps/io.github.nvibrant.Aero.svg
+~/.config/autostart/io.github.nvibrant.Aero.Restore.desktop
 ```
 
-The GUI resolves its private backend beside the package; an upstream system CLI
-is never used for discovery. You can remove the original checkout after install.
-The installer adds a user XDG autostart entry to restore saved colours at desktop
-login without opening a window (see [GUI.md](GUI.md)). It does not apply colours
-during installation, change your shell profile, or install Python modules into
-the system site-packages directory.
+Custom prefixes must be absolute and writable. The menu may need their `share`
+directory in `XDG_DATA_DIRS`. The login entry uses an absolute executable path,
+so it does not depend on shell profiles or PATH. It is installed for the current
+user under an absolute `XDG_CONFIG_HOME`, falling back to `~/.config`.
 
-A recognized installation can be upgraded in place. Existing unrelated launchers
-or an unrecognized payload directory cause installation to fail rather than be
-overwritten. The app payload is staged before replacement. Custom prefixes must
-be absolute and writable; choose a user-owned prefix unless intentionally doing
-a system installation.
-
-## Remove
-
-```bash
-make uninstall
-# A custom install must use the same prefix:
-./build.sh uninstall --prefix /absolute/prefix
-```
-
-Without a checkout:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/build.sh | bash -s -- uninstall
-```
-
-Uninstall removes this application's payload, two launchers and desktop file.
-The managed login restore entry and custom app icon are also removed and desktop/icon caches are refreshed when
-the corresponding tools are available. Other prefix contents, cached headers and user preferences in
-`~/.config/nvibrant/settings.json` (or `XDG_CONFIG_HOME`) remain.
+The Rust installer recognizes the previous Python version's marker and upgrades
+it in place. It stages the new payload and restores the old payload and managed
+files if replacement fails. Unrelated installations and autostart entries are
+refused. A desktop-disabled login entry survives upgrades. Installation does not
+apply colours. Saved settings retain the existing version-1 JSON schema, physical
+connector identities, atomic replacement and cross-process merge lock.
 
 ## Verification
 
-Local checks are `make test` and `make test-gui`. The installer tests cover
-argument rejection, stdin execution, prefixes with spaces, installed launchers,
-failed-copy rollback and removal without touching unrelated files.
+`make test` covers legacy settings migration, validation, corrupt-file protection,
+concurrent saves, restore retries, selective restore, numeric CLI validation,
+installation in prefixes with spaces, upgrades, disabled startup entries and
+uninstall preserving user files. `make test-gui` exercises actual Rust/GTK widgets
+under Xvfb, with no hardware changes or preference writes.
 
-A ready-to-enable CI template is included at [`ci/native-build.yml`](ci/native-build.yml).
-Copy it to `.github/workflows/native-build.yml` to run on native GitHub-hosted
-**ubuntu-24.04 (x86-64)** and **ubuntu-24.04-arm (ARM64)** runners. Publishing an
-active workflow with a GitHub OAuth token requires its `workflow` scope.
+```bash
+NVIBRANT_SCREENSHOT="$PWD/screenshots/rust.png" make test-gui
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+```
 
-Each job builds, checks the ELF machine type, runs backend/installer tests,
-exercises GTK from both the checkout and the installed payload, validates the
-desktop entry, and uninstalls. CPU-only build/install checks do not verify
-colour application on ARM64 NVIDIA hardware.
+Real hardware auto-detection: `build/nvibrant --list-all-json`.
+Single-GPU discovery: `build/nvibrant --list-json`. Real restoration:
+`~/.local/bin/nvibrant-gtk --restore`. These must be checked separately on NVIDIA
+hardware; CPU-only CI cannot establish driver compatibility or visible colour.
+
+## Uninstall
+
+```bash
+make uninstall
+# Without a checkout:
+~/.local/bin/nvibrant --uninstall "$HOME/.local"
+```
+
+Uninstall removes the recognized payload, two launcher symlinks, icon, desktop
+entry and matching login entry. Preferences and cached NVIDIA headers remain.
