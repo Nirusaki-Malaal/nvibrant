@@ -163,6 +163,12 @@ int main(int argc, char *argv[]) {
             }
             printf(") • ");
 
+            // Restore only saved connectors; leave newly attached outputs alone.
+            if (index < argc && strcmp(argv[index], "--skip") == 0) {
+                printf("Skipped\n");
+                continue;
+            }
+
             // Make the request to set attribute for this monitor
             NvKmsSetDpyAttributeParams setDpyAttr{};
             setDpyAttr.request.deviceHandle = allocDevice.reply.deviceHandle;

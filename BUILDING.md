@@ -112,8 +112,10 @@ share/icons/hicolor/scalable/apps/io.github.nvibrant.Aero.svg
 
 The GUI resolves its private backend beside the package; an upstream system CLI
 is never used for discovery. You can remove the original checkout after install.
-The installer does not apply colours, enable autostart, change your shell profile,
-or install Python modules into the system site-packages directory.
+The installer adds a user XDG autostart entry to restore saved colours at desktop
+login without opening a window (see [GUI.md](GUI.md)). It does not apply colours
+during installation, change your shell profile, or install Python modules into
+the system site-packages directory.
 
 A recognized installation can be upgraded in place. Existing unrelated launchers
 or an unrecognized payload directory cause installation to fail rather than be
@@ -136,7 +138,7 @@ curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/build
 ```
 
 Uninstall removes this application's payload, two launchers and desktop file.
-The custom app icon is also removed and desktop/icon caches are refreshed when
+The managed login restore entry and custom app icon are also removed and desktop/icon caches are refreshed when
 the corresponding tools are available. Other prefix contents, cached headers and user preferences in
 `~/.config/nvibrant/settings.json` (or `XDG_CONFIG_HOME`) remain.
 

@@ -15,6 +15,20 @@ APP_ID = 'io.github.nvibrant.Aero'
 DESKTOP = f'{APP_ID}.desktop'
 
 
+def autostart_path():
+    root = Path(os.environ.get('XDG_CONFIG_HOME') or Path.home() / '.config')
+    if not root.is_absolute():
+        root = Path.home() / '.config'
+    return root / 'autostart' / f'{APP_ID}.Restore.desktop'
+
+
+def restore_entry(gui):
+    executable = str(gui).replace('\\', '\\\\').replace('"', '\\"').replace('`', '\\`').replace('$', '\\$').replace('%', '%%')
+    return ('[Desktop Entry]\nType=Application\nName=nVibrant saved colours\n'
+            f'Exec="{executable}" --restore\nTerminal=false\n'
+            f'X-NVibrant-Launcher={gui}\n')
+
+
 def locations(prefix):
     return (prefix / 'lib/nvibrant', prefix / 'bin/nvibrant-gtk',
             prefix / 'bin/nvibrant', prefix / 'share/applications' / DESKTOP,
@@ -40,6 +54,9 @@ def check_owned(prefix):
 
 def install(source, build_dir, prefix, driver):
     app, gui, cli, desktop, icon = check_owned(prefix)
+    autostart = autostart_path()
+    if exists(autostart) and f'X-NVibrant-Launcher={gui}\n' not in autostart.read_text():
+        raise RuntimeError(f'Refusing to replace an unrelated autostart entry: {autostart}')
     backend = build_dir / 'nvibrant'
     if not backend.is_file() or not os.access(backend, os.X_OK):
         raise RuntimeError(f'Backend is missing or not executable: {backend}')
@@ -65,6 +82,9 @@ def install(source, build_dir, prefix, driver):
 # nVibrant Glass launcher
 app_dir=$(CDPATH= cd -- "$(dirname -- "$0")/../lib/nvibrant" && pwd) || exit 1
 cd -- "$app_dir" || exit 1
+if [ "$#" -eq 1 ] && [ "$1" = "--restore" ]; then
+    exec INTERPRETER -m nvibrant.restore
+fi
 exec INTERPRETER -m nvibrant.gui "$@"
 '''.replace('INTERPRETER', shlex.quote(sys.executable))
         entry = (source / 'data' / DESKTOP).read_text()
@@ -82,6 +102,10 @@ exec INTERPRETER -m nvibrant.gui "$@"
             cli.symlink_to('../lib/nvibrant/build/nvibrant')
             desktop.write_text(entry)
             shutil.copy2(app / 'nvibrant/assets' / f'{APP_ID}.svg', icon)
+            # Keep a desktop's Hidden=true / disabled entry across upgrades.
+            if not exists(autostart):
+                autostart.parent.mkdir(parents=True, exist_ok=True)
+                autostart.write_text(restore_entry(gui))
         except Exception:
             # Restore the previous complete payload on an interrupted upgrade.
             if backup.exists():
@@ -100,6 +124,7 @@ exec INTERPRETER -m nvibrant.gui "$@"
     if str(gui.parent) not in os.environ.get('PATH', '').split(os.pathsep):
         print(f'Add {gui.parent} to PATH to use nvibrant-gtk by name.')
     print('A desktop launcher is installed. No display settings were changed.')
+    print(f'Saved colours will be restored at desktop login: {autostart}')
 
 
 def uninstall(prefix):
@@ -107,6 +132,9 @@ def uninstall(prefix):
     if not app.exists():
         print(f'No nVibrant Glass installation at {prefix}')
         return
+    autostart = autostart_path()
+    if exists(autostart) and f'X-NVibrant-Launcher={gui}\n' in autostart.read_text():
+        autostart.unlink()
     for path in (gui, cli, desktop, icon):
         if exists(path):
             path.unlink()

@@ -60,11 +60,21 @@ natural is remembered after you click Apply. Different GPU indices and physical
 output connectors have separate values; moving a monitor to another port uses
 that port's preferences.
 
-Opening or refreshing still does not change hardware settings. If reboot, sleep
-or a driver reset clears the effect, open the app and click Apply to restore the
-saved values. The app does not install an autostart service. If settings cannot
-be read or written, the status and Details explain the error without claiming
-they were saved. User preferences survive application upgrades and uninstall.
+Installed builds restore saved colours automatically in the background after desktop
+login, including after a reboot. The installer adds an XDG autostart entry at
+`~/.config/autostart/io.github.nvibrant.Aero.Restore.desktop` (or under an absolute
+`XDG_CONFIG_HOME`). Restore retries discovery/driver errors up to 12 times, five
+seconds apart, to allow displays to become ready. Only connected outputs with a
+saved value are changed; new outputs are left untouched. No window is opened and
+preferences are never rewritten by restore. You can run it manually with
+`nvibrant-gtk --restore` or `python3 -m nvibrant.restore` from the checkout.
+
+Opening or refreshing the GUI still does not change hardware settings. After sleep
+or a driver reset during a session, click Apply to restore the effect. Disable the
+login entry in your desktop's Startup Applications settings if desired; upgrades
+preserve that entry, and uninstall removes it. If settings cannot be read or written,
+the status and Details explain the error without claiming they were saved. User
+preferences survive application upgrades and uninstall.
 
 On hybrid laptops, an internal screen driven by the integrated GPU is not
 controllable through nVibrant. Expand Details for backend errors. The GUI never
@@ -90,7 +100,8 @@ Partial enumeration and per-output apply failures return a nonzero exit code.
 The GUI deliberately never falls back to `/usr/bin/nvibrant`: upstream parses
 unknown arguments as zero, so using its binary for discovery would reset colours.
 Use this fork's local Meson build or this fork's bundled wheel binaries.
-The original `nvibrant` CLI remains available and unchanged in usage.
+The original `nvibrant` CLI remains available. A positional `--skip` leaves that
+output untouched; restore uses it for outputs without saved preferences.
 
 ## Checks
 

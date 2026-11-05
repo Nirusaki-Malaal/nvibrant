@@ -103,7 +103,7 @@ class AeroWindow(Gtk.ApplicationWindow):
         details = Gtk.Expander(label='Details & compatibility')
         self.log = label('NVIDIA must drive the display directly. Hybrid laptop screens may use the iGPU.\n'
                          'Sliders remember the last successfully applied values for each GPU/output.\n'
-                         'Saved values are loaded without changing your screen. Click Apply to restore them after a driver reset.', 'muted')
+                         'Installed builds restore saved colours automatically at login. Click Apply after a driver reset.', 'muted')
         self.log.set_wrap(True)
         self.log.set_selectable(True)
         details.set_child(self.log)
@@ -302,7 +302,13 @@ class AeroWindow(Gtk.ApplicationWindow):
 def main():
     parser = argparse.ArgumentParser(description='nVibrant Glass GTK 4 interface')
     parser.add_argument('--demo', action='store_true', help='Preview without accessing NVIDIA hardware')
+    parser.add_argument('--restore', action='store_true', help='Restore saved colours without opening a window')
     args = parser.parse_args()
+    if args.restore:
+        if args.demo:
+            parser.error('--restore cannot be combined with --demo')
+        from nvibrant.restore import main as restore_main
+        return restore_main()
     app = Gtk.Application(application_id='io.github.nvibrant.Aero',
                           flags=Gio.ApplicationFlags.NON_UNIQUE)
     def activate(application):

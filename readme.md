@@ -5,6 +5,7 @@
 A native GTK 4 control panel for NVIDIA digital vibrance on Linux, with glossy
 black glass panels, per-display sliders, presets, and explicit Apply/Reset.
 Successfully applied values and the GPU selection are remembered between launches.
+Installed builds automatically restore saved colours at desktop login after a reboot.
 
 ![nVibrant Glass - glossy black GTK interface](screenshots/aero.png)
 

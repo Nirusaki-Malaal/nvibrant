@@ -40,10 +40,10 @@ class Backend:
             raise RuntimeError('Invalid display information from backend')
         return ports
 
-    def apply(self, ports, values):
+    def apply(self, ports, values, preserve_unspecified=False):
         if not ports:
             raise RuntimeError('No NVIDIA displays detected')
-        args = [0] * (max(p['index'] for p in ports) + 1)
+        args = ['--skip' if preserve_unspecified else 0] * (max(p['index'] for p in ports) + 1)
         for index, value in values.items():
             if index < 0 or index >= len(args) or not -1024 <= value <= 1023:
                 raise ValueError('Invalid output or vibrance value')

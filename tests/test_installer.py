@@ -18,6 +18,9 @@ class InstallerTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix='nvibrant-test-')
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+        config = patch.dict(os.environ, {'XDG_CONFIG_HOME': str(self.root / 'config')})
+        config.start()
+        self.addCleanup(config.stop)
         self.prefix = self.root / 'prefix with spaces'
         self.build = self.root / 'build'
         self.build.mkdir()
@@ -45,6 +48,10 @@ class InstallerTests(unittest.TestCase):
         icon = self.prefix / 'share/icons/hicolor/scalable/apps' / f'{installer.APP_ID}.svg'
         self.assertEqual(icon.read_bytes(), (ROOT / 'nvibrant/assets' / icon.name).read_bytes())
         self.assertFalse((self.prefix / 'lib/nvibrant/nvibrant/main.cpp').exists())
+        self.assertIn(f'Exec="{gui}" --restore', installer.autostart_path().read_text())
+        result = subprocess.run([gui, '--restore'], cwd='/', text=True, capture_output=True,
+                                env=dict(os.environ, DISPLAY='', WAYLAND_DISPLAY=''))
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_reinstall_and_uninstall_leave_other_prefix_files_alone(self):
         self.prefix.mkdir()
@@ -53,6 +60,7 @@ class InstallerTests(unittest.TestCase):
         self.install()
         self.install()
         installer.uninstall(self.prefix)
+        self.assertFalse(installer.autostart_path().exists())
         self.assertEqual(unrelated.read_text(), 'untouched')
         for path in installer.locations(self.prefix):
             self.assertFalse(installer.exists(path), str(path))
@@ -65,6 +73,22 @@ class InstallerTests(unittest.TestCase):
                 self.install()
         self.assertEqual((self.prefix / 'lib/nvibrant/build/nvibrant').read_bytes(), old_backend)
         self.assertFalse(list((self.prefix / 'lib').glob('.nvibrant-install-*')))
+
+    def test_upgrade_preserves_disabled_autostart(self):
+        self.install()
+        path = installer.autostart_path()
+        disabled = path.read_text() + 'Hidden=true\n'
+        path.write_text(disabled)
+        self.install()
+        self.assertEqual(path.read_text(), disabled)
+
+    def test_unrelated_autostart_is_not_overwritten(self):
+        path = installer.autostart_path()
+        path.parent.mkdir(parents=True)
+        path.write_text('unrelated')
+        with self.assertRaisesRegex(RuntimeError, 'unrelated autostart'):
+            self.install()
+        self.assertEqual(path.read_text(), 'unrelated')
 
     def test_refuses_to_overwrite_existing_unrelated_cli(self):
         path = self.prefix / 'bin/nvibrant'

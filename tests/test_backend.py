@@ -44,6 +44,12 @@ class BackendTests(unittest.TestCase):
             backend.apply([{'index': 0}, {'index': 2}], {0: -1024, 2: 1023})
             run.assert_called_once_with(-1024, 0, 1023)
 
+    def test_restore_skips_unsaved_outputs_instead_of_resetting_them(self):
+        backend = Backend()
+        with patch.object(backend, 'run', return_value='Success') as run:
+            backend.apply([{'index': 0}, {'index': 3}], {3: 512}, preserve_unspecified=True)
+            run.assert_called_once_with('--skip', '--skip', '--skip', 512)
+
     def test_no_success_is_an_error(self):
         backend = Backend()
         with patch.object(backend, 'run', return_value='None'):
