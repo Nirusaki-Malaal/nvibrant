@@ -1,121 +1,148 @@
-# NVibrant
+<p align="center">
+  <img src="assets/io.github.nvibrant.Aero.svg" alt="NVibrant" width="88">
+</p>
+<h1 align="center">NVibrant</h1>
+<p align="center">Tool for Wayland to change vibrancy on NVIDIA GPUs.</p>
+<p align="center">
+  <a href="https://github.com/Nirusaki-Malaal/nvibrant/actions/workflows/native-build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/Nirusaki-Malaal/nvibrant/native-build.yml?branch=main&amp;label=build"></a>
+  <img alt="Rust" src="https://img.shields.io/badge/Rust-native-dea584">
+  <img alt="Linux Wayland" src="https://img.shields.io/badge/Linux-Wayland-76b900">
+  <a href="license.txt"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-white"></a>
+</p>
 
-Tool for Wayland to change vibrancy on NVIDIA GPUs.
+NVibrant gives NVIDIA-driven displays a little more colour—or a lot less.
+A native Rust app with a minimal black interface, square controls, an Ubuntu
+wordmark, and automatic screen detection. Maintained by **Nirusaki-Malaal**.
 
-A native **Rust + GTK 4** app for NVIDIA digital vibrance on Linux. An Ubuntu wordmark,
-a minimal black interface with square corners, automatic NVIDIA display detection, per-display sliders
-and four presets. The title pairs a green “N” with a small NVIDIA SVG.
-The entire application, NVIDIA backend, settings store, login restore and installer are Rust.
-There is no Python or C++ application runtime.
-
-![NVibrant Rust interface](screenshots/rust.png)
+![NVibrant interface](screenshots/rust.png)
 
 ## Install
 
-Build and install natively on **x86-64 or ARM64 Linux**:
+Run this in a terminal as your normal user:
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/build.sh | bash -s -- install --install-deps
+```sh
+curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/install.sh | sh
 ```
 
-The installer selects headers matching your running NVIDIA driver, compiles the
-Rust executable, and installs into `~/.local`. `--install-deps` explicitly opts
-into installing distro packages and may use sudo. Omit it if dependencies are
-already available. GTK 4.8 or newer is required; an NVIDIA driver must drive your
-display directly for hardware controls.
+The installer detects your Linux architecture, installs build dependencies,
+selects headers matching your NVIDIA driver, builds NVibrant and adds its app
+menu entry. It supports **x86-64 and ARM64**, with dependency setup for
+Debian/Ubuntu, Arch, Fedora, openSUSE, Alpine and Void Linux.
 
-You need Rust/Cargo >=1.85, Clang/libclang, a C linker,
-`pkg-config`, GTK 4 development headers, Git and Bash. If your distro's Rust is
-older than the locked dependencies require, update the toolchain before building.
-Ubuntu is the preferred font, with Cantarell/sans-serif fallbacks.
+System package installation may ask for sudo. If a recent Rust toolchain is
+missing, the installer prepares one in a private user cache. Your shell profile
+and existing toolchain settings are left alone. The app installs into `~/.local`.
 
-From a checkout:
+Launch **NVibrant** from your app menu, or run:
 
-```bash
-git clone https://github.com/Nirusaki-Malaal/nvibrant.git
-cd nvibrant
-make deps       # Optional: install distro build dependencies
-make check
-make
-make install
+```sh
 ~/.local/bin/nvibrant-gtk
 ```
 
-Both Make and the curl installer use `build.sh`. The installed executable embeds
-its theme and icon and runs independently of the checkout. Rust is only needed
-to build; GTK and its shared-library dependencies are needed at runtime.
+Already have the dependencies? Skip their installation:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/install.sh | sh -s -- --no-deps
+```
+
+For a custom location, append `--prefix /absolute/path`. Run the same install
+command to **update** NVibrant; saved colour preferences are retained.
+
+## What it does
+
+- **Finds NVIDIA screens automatically.** Connected outputs from multiple NVIDIA
+  GPUs appear together, with no GPU selector to configure.
+- **Controls each screen separately.** Choose Natural, Fresh, Vivid or Luminous,
+  or adjust the slider from grayscale to maximum vibrancy.
+- **Remembers your colours.** Apply saves preferences per GPU and output connector.
+- **Restores them after reboot.** A background login task restores saved colours
+  when the desktop starts, without opening a window.
 
 ## Use
 
-1. Choose a preset or move a display's slider.
-2. Click **Apply** to apply and save the selected values.
-3. **Reset** selects zero; click Apply to save the reset.
-4. **Refresh** rescans connected displays across all NVIDIA GPUs automatically.
+Move a slider or choose a preset, then click **Apply**. Changes take effect only
+when applied. **Reset** selects natural colours; Apply commits that choice.
+**Refresh** rescans screens while keeping pending changes for unchanged outputs.
 
-The heading is simply **NVibrant**. The GPU selector has been removed; connected
-NVIDIA screens are detected automatically. There is no marketing subtitle, instruction
-line, saved-colours status panel, or Details & compatibility section. Errors appear
-in a dialog when needed; Apply briefly confirms success on the button itself.
-Opening and refreshing the window only discover displays and load preferences.
+Opening the app reads saved preferences without changing the display. Driver
+and save errors appear in a dialog. For a hardware-free preview, run
+`nvibrant-gtk --demo`.
 
-Values range from −1024 (grayscale) through 0 (natural) to 1023 (maximum).
-Successfully applied preferences are saved per GPU and physical output connector
-in `~/.config/nvibrant/settings.json`, or under an absolute `XDG_CONFIG_HOME`.
-**Existing settings from the Python version are read automatically.** Failed
-hardware calls, unapplied edits and demo previews do not overwrite preferences.
+## Requirements
 
-Saved colours restore automatically in the background at **desktop login after
-a reboot**, without opening a window. Discovery and driver errors are retried up
-to 12 times, five seconds apart. Only connected outputs with saved values change.
-Disable the `NVibrant saved colours` entry in Startup Applications to opt out;
-upgrades preserve disabled entries. After sleep or an in-session driver reset,
-use Apply or run `nvibrant-gtk --restore`. A compositor that does not run XDG
-autostart entries needs that command added to its own startup configuration.
+- Linux with a Wayland desktop and a loaded NVIDIA driver.
+- A display driven directly by NVIDIA. A laptop panel wired to an integrated GPU
+  cannot be adjusted through NVIDIA's controls.
+- GTK 4.8 or newer. The installer handles development packages on supported distros.
+- Internet access and disk space for the first source build.
+
+The universal installer builds for the host architecture and driver rather than
+assuming one prebuilt binary works everywhere. On other Linux distributions,
+prepare the dependencies listed in [BUILDING.md](BUILDING.md), then use `--no-deps`.
+Re-run the installer after a driver update if NVibrant reports a version mismatch.
 
 ## CLI
 
-```bash
-nvibrant                       # Open the GUI
-nvibrant-gtk --demo             # Preview without hardware or saved settings
-nvibrant --list-all-json        # Auto-detect connected screens across NVIDIA GPUs
-nvibrant --list-json            # Read-only output discovery for one GPU
-nvibrant --gpu 0 --list-json
-nvibrant 512 512                # Positional values, including disconnected ports
-nvibrant --skip 512             # Leave the first output untouched
-nvibrant-gtk --restore          # Restore saved GUI preferences without a window
-ATTRIBUTE=dithering nvibrant 2  # Original attribute controls remain available
+```sh
+nvibrant                       # Open the app
+nvibrant --list-all-json        # Discover connected NVIDIA screens
+nvibrant --list-json --gpu 0    # Inspect all outputs on one GPU
+nvibrant 512 512                # Set positional output values directly
+nvibrant --skip 512             # Leave the first output unchanged
+nvibrant-gtk --restore          # Restore saved preferences without a window
+nvibrant-gtk --demo             # Preview without touching hardware
 nvibrant --version
 ```
 
-Numeric CLI commands apply directly and do not update GUI preferences. Missing
-positional values retain the original CLI default of natural vibrance; use
-`--skip` for outputs you want to leave untouched. Unknown flags are errors.
-`NVIDIA_GPU` selects the default GPU; explicit `--gpu` takes precedence.
+Vibrancy ranges from **−1024** (grayscale), through **0** (natural), to
+**1023** (maximum). Positional CLI values include disconnected ports; inspect
+`--list-json` to see their order. CLI changes do not overwrite GUI preferences.
+`NVIDIA_GPU` and the `ATTRIBUTE` dithering controls are also supported.
 
-## Build and verify
+## Preferences and startup
 
-```bash
-make test        # Rust settings, restore, CLI and installer tests
-make test-gui    # Real GTK controls with simulated hardware under Xvfb
-cargo fmt --check
-cargo clippy --all-targets -- -D warnings
-make install PREFIX="$HOME/.local"
-make uninstall
+Preferences live in `~/.config/nvibrant/settings.json`, or beneath an absolute
+`XDG_CONFIG_HOME`. Existing settings are carried forward during upgrades.
+Unapplied changes and failed driver requests are never saved.
+
+The login task restores connected outputs that have saved values, retrying while
+the driver becomes ready. Disable **NVibrant saved colours** in your desktop's
+Startup Applications settings to opt out. Desktops that do not run XDG autostart
+entries can run `nvibrant-gtk --restore` from their own startup configuration.
+After sleep or an in-session driver reset, use that command or Apply again.
+
+## Build from source
+
+```sh
+git clone https://github.com/Nirusaki-Malaal/nvibrant.git
+cd nvibrant
+make deps
+make
+make install
 ```
 
-Custom builds: `make DRIVER_VERSION=615.78.08 JOBS=2`, or supply an absolute
-`NVIBRANT_NVIDIA_HEADERS` directory. Rebuild after a driver upgrade if ioctl calls
-fail. No system Python packages or NVIDIA kernel drivers are installed by the
-normal build. Uninstall removes the app and its managed desktop/login entries,
-while retaining saved preferences.
+The application, GTK interface, NVIDIA backend, settings store, login restore and
+installer are written in Rust. Theme and SVG assets are embedded in the executable.
+See [BUILDING.md](BUILDING.md) for dependencies, driver headers and build options,
+and [GUI.md](GUI.md) for detailed controls.
 
-See [BUILDING.md](BUILDING.md) for architecture, installation layout and build
-options, and [GUI.md](GUI.md) for controls and compatibility.
+```sh
+make test
+make test-gui
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+```
 
-## Credits and license
+## Uninstall
 
-Based on [Tremeschin/nvibrant](https://github.com/Tremeschin/nvibrant), rewritten
-in Rust for this fork. NVIDIA ABI bindings are generated at build time from the
-[Open GPU Kernel Modules](https://github.com/NVIDIA/open-gpu-kernel-modules) headers.
-The title uses a hand-coded NVIDIA-style eye SVG.
-NVIDIA is a trademark of NVIDIA Corporation. MIT license for the application; see [license.txt](license.txt).
+```sh
+~/.local/bin/nvibrant --uninstall "$HOME/.local"
+```
+
+This removes the app, menu entry, icon and managed login task. Your saved
+preferences remain available for a later reinstall.
+
+## License
+
+[MIT](license.txt). See [NOTICE.md](NOTICE.md) for acknowledgements.
+NVIDIA is a trademark of NVIDIA Corporation.

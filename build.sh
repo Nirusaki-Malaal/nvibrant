@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # NVibrant: native Linux source builder and curl-compatible installer.
 set -Eeuo pipefail
-trap 'printf "nVibrant: command failed (line %s). Installation was not reported as successful.\n" "$LINENO" >&2' ERR
+trap 'printf "NVibrant: command failed (line %s). Installation was not reported as successful.\n" "$LINENO" >&2' ERR
 
 usage() {
     cat <<'HELP'
@@ -25,7 +25,7 @@ Package installation is opt-in; only that step may use sudo.
 HELP
 }
 
-die() { printf 'nVibrant: %s\n' "$*" >&2; exit 1; }
+die() { printf 'NVibrant: %s\n' "$*" >&2; exit 1; }
 need() { command -v "$1" >/dev/null 2>&1 || die "Missing $1. Run ./build.sh deps or pass --install-deps."; }
 
 architecture() {
@@ -42,16 +42,59 @@ install_deps() {
     if [[ $(id -u) != 0 ]]; then need sudo; elevate=(sudo); fi
     if command -v apt-get >/dev/null 2>&1; then
         "${elevate[@]}" apt-get update
-        "${elevate[@]}" apt-get install -y git ca-certificates build-essential cargo rustc clang libclang-dev pkg-config libgtk-4-dev
+        "${elevate[@]}" apt-get install -y git ca-certificates build-essential curl clang libclang-dev pkg-config libgtk-4-dev librsvg2-common
     elif command -v pacman >/dev/null 2>&1; then
-        "${elevate[@]}" pacman -S --needed --noconfirm git ca-certificates base-devel rust clang pkgconf gtk4
+        "${elevate[@]}" pacman -S --needed --noconfirm git ca-certificates base-devel curl clang pkgconf gtk4 librsvg
     elif command -v dnf >/dev/null 2>&1; then
-        "${elevate[@]}" dnf install -y git ca-certificates gcc make cargo rust clang clang-devel pkgconf-pkg-config gtk4-devel
+        "${elevate[@]}" dnf install -y git ca-certificates gcc make curl clang clang-devel pkgconf-pkg-config gtk4-devel librsvg2
     elif command -v zypper >/dev/null 2>&1; then
-        "${elevate[@]}" zypper --non-interactive install git ca-certificates gcc make cargo rust clang clang-devel pkg-config gtk4-devel
+        "${elevate[@]}" zypper --non-interactive install git ca-certificates gcc make curl clang clang-devel pkg-config gtk4-devel gdk-pixbuf-loader-rsvg
+    elif command -v apk >/dev/null 2>&1; then
+        "${elevate[@]}" apk add --no-cache git ca-certificates curl build-base clang clang-dev llvm-dev pkgconf gtk4.0-dev librsvg
+    elif command -v xbps-install >/dev/null 2>&1; then
+        "${elevate[@]}" xbps-install -Sy git ca-certificates curl base-devel clang pkg-config gtk4-devel librsvg
     else
         die 'No supported package manager found. Install Git, Rust/Cargo >=1.85, clang/libclang, pkg-config and GTK4 development headers manually.'
     fi
+}
+
+fetch() {
+    if command -v curl >/dev/null 2>&1; then
+        curl --fail --location --silent --show-error --retry 3 --connect-timeout 20 "$1" -o "$2"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -q "$1" -O "$2"
+    else
+        die 'curl or wget is required to download the Rust toolchain.'
+    fi
+}
+
+rust_ready() {
+    command -v cargo >/dev/null 2>&1 && command -v rustc >/dev/null 2>&1 || return 1
+    local version major minor
+    version=$(rustc --version) || return 1
+    version=${version#rustc }; version=${version%% *}
+    major=${version%%.*}; version=${version#*.}; minor=${version%%.*}
+    [[ $major =~ ^[0-9]+$ && $minor =~ ^[0-9]+$ ]] || return 1
+    ((major > 1 || (major == 1 && minor >= 85)))
+}
+
+ensure_rust() {
+    if rust_ready; then return; fi
+    [[ $deps == true ]] || die 'Rust/Cargo >=1.85 is required. Run install.sh, or build.sh deps to prepare dependencies.'
+    local toolchain_cache=${XDG_CACHE_HOME:-$HOME/.cache}/nvibrant/toolchain
+    # This modifies only the current installer process, not the user's profile,
+    # existing Rust installation, system interpreter or global toolchain defaults.
+    export CARGO_HOME=$toolchain_cache/cargo RUSTUP_HOME=$toolchain_cache/rustup
+    export PATH="$CARGO_HOME/bin:$PATH"
+    if rust_ready; then return; fi
+    mkdir -p -- "$toolchain_cache"
+    printf 'Preparing a private Rust toolchain in %s\n' "$toolchain_cache"
+    local rustup_script
+    rustup_script=$(mktemp "$toolchain_cache/rustup-init.XXXXXXXX")
+    fetch https://sh.rustup.rs "$rustup_script"
+    sh "$rustup_script" -y --no-modify-path --profile minimal --default-toolchain stable
+    rm -f -- "$rustup_script"
+    rust_ready || die 'The Rust toolchain could not be prepared.'
 }
 
 check_deps() {
@@ -146,13 +189,14 @@ main() {
     [[ -z $jobs || $jobs =~ ^[1-9][0-9]*$ ]] || die '--jobs must be a positive integer.'
     architecture
     printf 'NVibrant · Linux %s · %s\n' "$arch" "$action"
-    if [[ $action == deps || $deps == true ]]; then install_deps; fi
-    [[ $action != deps ]] || return 0
+    if [[ $action == deps || $deps == true ]]; then install_deps; deps=true; fi
+    if [[ $action == deps ]]; then ensure_rust; return; fi
     if [[ $action == uninstall ]]; then
         [[ -x $prefix/lib/nvibrant/nvibrant ]] || die 'No Rust NVibrant installation found at this prefix.'
         "$prefix/lib/nvibrant/nvibrant" --uninstall "$prefix"
         return
     fi
+    ensure_rust
     check_deps
     [[ $action != check ]] || { printf 'Build and GTK runtime dependencies are ready.\n'; return 0; }
     get_source
@@ -168,9 +212,13 @@ main() {
     [[ $headers == /* ]] || headers=$source_dir/$headers
     printf 'Using NVIDIA headers %s from %s\n' "$driver_version" "$headers"
     export NVIBRANT_NVIDIA_HEADERS=$headers
-    (cd -- "$source_dir" && cargo build --release --locked --target-dir "$source_dir/target" -j "$jobs")
+    local target_dir=$source_dir/target
+    if [[ -n $temporary_source ]]; then
+        target_dir=${XDG_CACHE_HOME:-$HOME/.cache}/nvibrant/target/$arch
+    fi
+    (cd -- "$source_dir" && cargo build --release --locked --target-dir "$target_dir" -j "$jobs")
     mkdir -p -- "$build_dir"
-    cp -- "$source_dir/target/release/nvibrant" "$build_dir/nvibrant"
+    cp -- "$target_dir/release/nvibrant" "$build_dir/nvibrant"
     if [[ $action == install ]]; then
         "$build_dir/nvibrant" --install "$prefix"
     else

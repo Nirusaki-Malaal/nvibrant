@@ -32,9 +32,14 @@ fn main() {
     ] {
         builder = builder.clang_arg(format!("-I{}", headers.join(directory).display()));
     }
-    builder
+    let bindings = builder
         .generate()
-        .expect("NVIDIA headers required; run ./build.sh build")
+        .expect("NVIDIA headers required; run ./build.sh build");
+    println!("cargo:rustc-check-cfg=cfg(nvidia_struct_device_id)");
+    if bindings.to_string().contains("pub deviceId: NvKmsDeviceId") {
+        println!("cargo:rustc-cfg=nvidia_struct_device_id");
+    }
+    bindings
         .write_to_file(PathBuf::from(env::var_os("OUT_DIR").unwrap()).join("nvidia.rs"))
         .unwrap();
 }

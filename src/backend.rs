@@ -90,7 +90,14 @@ impl Device {
             "Invalid driver version"
         );
         // Select the physical GPU; leave the MIG partition at its default.
-        data.request.deviceId.rmDeviceId = u32::from(gpu);
+        #[cfg(nvidia_struct_device_id)]
+        {
+            data.request.deviceId.rmDeviceId = u32::from(gpu);
+        }
+        #[cfg(not(nvidia_struct_device_id))]
+        {
+            data.request.deviceId = u32::from(gpu);
+        }
         for (slot, byte) in data.request.versionString.iter_mut().zip(version.bytes()) {
             *slot = byte as _;
         }

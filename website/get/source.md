@@ -9,7 +9,7 @@ tags:
 
 # Build from source
 
-This fork is a native Rust + GTK 4 application. The previous Python/C++ build and
+NVibrant is a native Rust + GTK 4 application. The previous Python/C++ build and
 wheel packaging have been replaced by Cargo and a self-contained Rust executable.
 
 ```bash

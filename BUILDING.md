@@ -12,10 +12,12 @@ and installer. No Python interpreter or separate C++ backend is used.
 - Git, Bash and Make; Xvfb/xauth for GUI smoke tests only.
 - A compatible loaded NVIDIA driver for real hardware operations.
 
-`make deps` installs distro packages on Debian/Ubuntu, Arch, Fedora or openSUSE.
+`make deps` installs distro packages on Debian/Ubuntu, Arch, Fedora, openSUSE,
+Alpine or Void. A missing or outdated Rust toolchain is prepared in a private
+cache at `${XDG_CACHE_HOME:-~/.cache}/nvibrant/toolchain`.
 It may use sudo. Other build and user-prefix installation steps run as your user.
-Distro packages can lag behind Rust crate requirements; update Rust if Cargo
-reports an unsupported compiler version. Ubuntu font is optional; GTK falls back
+The installer reuses an existing Rust >=1.85 toolchain when available, and
+does not change shell profiles or global Rust defaults. Ubuntu font is optional; GTK falls back
 to Cantarell or the system sans-serif font.
 
 ## Build and install
@@ -58,8 +60,13 @@ switch your tracked submodule. Cargo uses the committed lockfile. It builds for
 the host architecture; the shell installer accepts Linux x86-64 and ARM64.
 
 `BUILD_DIR=/absolute/path` changes where the final executable is copied (default
-`build/nvibrant`). Cargo's intermediate output remains under `target/`.
+`build/nvibrant`). Cargo's intermediate output remains under `target/` for local builds; downloaded
+builds reuse `${XDG_CACHE_HOME:-~/.cache}/nvibrant/target/ARCH`.
 `make clean` removes Cargo output. `./run-gtk --demo` launches the built executable.
+
+The portable `install.sh` entry point works with `sh`, prepares dependencies by
+default and invokes the shared `build.sh` implementation. Use `--no-deps` as its
+first option to skip dependency setup.
 
 The curl installer downloads this repository into a temporary checkout and builds
 it. `--ref TAG_OR_BRANCH` selects a ref; `--source-dir /checkout` selects existing

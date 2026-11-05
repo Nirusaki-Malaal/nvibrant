@@ -1,14 +1,14 @@
 [project]
 site_name = "NVibrant"
-site_author = "Tremeschin"
+site_author = "Nirusaki-Malaal"
 site_description = "Tool for Wayland to change vibrancy on NVIDIA GPUs."
-site_url  = "https://nvibrant.tremeschin.com/"
+site_url  = "https://nirusaki-malaal.github.io/nvibrant/"
 repo_url  = "https://github.com/Nirusaki-Malaal/nvibrant/"
 repo_name = "Nirusaki-Malaal/nvibrant"
 extra_css = ["main.css"]
 docs_dir  = "website"
 nav = [
-  {Origin = "https://tremeschin.com"},
+  {Repository = "https://github.com/Nirusaki-Malaal/nvibrant"},
   {Home = [
     "index.md",
     "changelog.md",

@@ -8,6 +8,7 @@ on:
       - 'assets/**'
       - 'Makefile'
       - 'build.sh'
+      - 'install.sh'
       - 'tests/**'
       - 'data/**'
       - '.github/workflows/native-build.yml'
@@ -41,7 +42,7 @@ jobs:
       - name: Check shell and Rust
         run: |
           bash -n build.sh
-          shellcheck build.sh
+          shellcheck build.sh install.sh
           cargo fmt --check
       - name: Build natively against matching NVIDIA headers
         run: make DRIVER_VERSION="$(cat data/nvidia-driver-version)"

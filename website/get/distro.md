@@ -8,10 +8,10 @@ tags:
 - Package Manager
 ---
 
-!!! note "Rust fork"
-    This page describes the original upstream distribution. This fork is now a
+!!! note "NVibrant Rust"
+    This page describes the original upstream distribution. NVibrant is now a
     native Rust/GTK app; use the [source build](source.md) or the Rust assets from
-    [this fork's releases](https://github.com/Nirusaki-Malaal/nvibrant/releases).
+    [this project's releases](https://github.com/Nirusaki-Malaal/nvibrant/releases).
 
 
 !!! info "Community packages are often safe, but not always checked by me!"

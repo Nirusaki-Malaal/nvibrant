@@ -31,7 +31,7 @@ jobs:
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "Pages is not configured on this fork; website artifact is available above."
+            echo "Pages is not configured on this project; website artifact is available above."
           fi
       - uses: actions/deploy-pages@v5
         if: steps.pages.outputs.enabled == 'true'
