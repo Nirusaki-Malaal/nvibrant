@@ -1,9 +1,8 @@
-build
-dist
-site
+# Generated build output
+/.build/
+/dist/
 
-__pycache__/
-*.pyc
-.venv/
-
-/target/
+# Editor files
+*.swp
+*.swo
+*~

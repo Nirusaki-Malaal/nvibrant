@@ -1,11 +1,12 @@
-# Acknowledgements
+# Notices
 
-NVibrant is maintained by Nirusaki-Malaal. Its native Rust implementation includes
-the GTK interface, settings, login restore, installation and NVIDIA driver controls.
+Copyright (c) 2026 Nirusaki-Malaal.
+NVibrant's current Rust application is licensed under GPL-3.0-only. See `LICENSE`.
 
-The project's history includes the original nVibrant work by Gabriel Tremeschin.
-The original MIT copyright notice is retained in `license.txt`.
+The project's history includes nVibrant by Gabriel Tremeschin. Its original MIT
+copyright and permission notice is retained in `licenses/MIT-upstream.txt`.
 
-NVIDIA ABI definitions are generated from the official Open GPU Kernel Modules
-headers, which retain their own NVIDIA copyright and license notices. The eye
-artwork used by this application is a hand-coded NVIDIA-style SVG.
+NVIDIA ABI definitions are generated from official Open GPU Kernel Modules
+headers downloaded at build time. Those headers retain NVIDIA's own copyright
+and license notices. The application's NVIDIA-style eye is a hand-coded SVG.
+NVIDIA is a trademark of NVIDIA Corporation.

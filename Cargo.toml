@@ -3,7 +3,7 @@ name = "nvibrant"
 version = "2.0.0"
 edition = "2024"
 rust-version = "1.85"
-license = "MIT"
+license = "GPL-3.0-only"
 description = "Tool for Wayland to change vibrancy on NVIDIA GPUs."
 repository = "https://github.com/Nirusaki-Malaal/nvibrant"
 

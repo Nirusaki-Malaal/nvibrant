@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use crate::settings;
 use anyhow::{Context, Result, ensure};
 use serde_json::json;
@@ -165,9 +166,15 @@ pub fn install(prefix: &Path) -> Result<()> {
             &json!({"application":"nvibrant-glass","language":"rust","version":env!("CARGO_PKG_VERSION")}),
         )?,
     )?;
+    fs::write(staging.path().join("LICENSE"), include_str!("../LICENSE"))?;
     fs::write(
-        staging.path().join("license.txt"),
-        include_str!("../license.txt"),
+        staging.path().join("NOTICE.md"),
+        include_str!("../NOTICE.md"),
+    )?;
+    fs::create_dir(staging.path().join("licenses"))?;
+    fs::write(
+        staging.path().join("licenses/MIT-upstream.txt"),
+        include_str!("../licenses/MIT-upstream.txt"),
     )?;
     let entry = format!(
         "[Desktop Entry]\nType=Application\nName=NVibrant\nComment=Tool for Wayland to change vibrancy on NVIDIA GPUs.\nExec={}\nIcon={ID}\nTerminal=false\nCategories=Settings;HardwareSettings;\nKeywords=NVIDIA;Vibrance;Display;Color;\n",
@@ -207,7 +214,7 @@ pub fn install(prefix: &Path) -> Result<()> {
         )?;
         write_atomic(
             &prefix.join(format!("share/icons/hicolor/scalable/apps/{ID}.svg")),
-            include_bytes!("../assets/io.github.nvibrant.Aero.svg"),
+            include_bytes!("../assets/icons/nvibrant.svg"),
         )?;
         if !exists(&startup) {
             write_atomic(&startup, restore.as_bytes())?;

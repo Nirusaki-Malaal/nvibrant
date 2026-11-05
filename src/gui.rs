@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use crate::{
     backend::{self, Port},
     runtime::{self, Display, Native},
@@ -98,7 +99,7 @@ impl Ui {
         window.set_child(Some(&scroll));
         let hero = row(12);
         let pixbuf = gtk::gdk_pixbuf::Pixbuf::from_read(std::io::Cursor::new(include_bytes!(
-            "../assets/nvidia.svg"
+            "../assets/icons/nvidia.svg"
         )))
         .expect("Embedded NVIDIA SVG must be valid");
         let logo = gtk::Image::from_paintable(Some(&gdk::Texture::for_pixbuf(&pixbuf)));

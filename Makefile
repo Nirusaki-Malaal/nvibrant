@@ -2,22 +2,22 @@
 SHELL := /bin/bash
 ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 PREFIX ?= $(HOME)/.local
-BUILD_DIR ?= $(ROOT)/build
+BUILD_DIR ?= $(ROOT)/.build/bin
 DRIVER_VERSION ?=
 JOBS ?= 2
 BUILD_FLAGS = --prefix "$(PREFIX)" --build-dir "$(BUILD_DIR)" $(if $(DRIVER_VERSION),--driver-version "$(DRIVER_VERSION)") --jobs "$(JOBS)"
 .PHONY: all build install uninstall deps check test test-gui clean help
 all: build
 build:
-	bash "$(ROOT)/build.sh" build $(BUILD_FLAGS)
+	bash "$(ROOT)/scripts/build.sh" build $(BUILD_FLAGS)
 install:
-	bash "$(ROOT)/build.sh" install $(BUILD_FLAGS)
+	bash "$(ROOT)/scripts/build.sh" install $(BUILD_FLAGS)
 uninstall:
-	bash "$(ROOT)/build.sh" uninstall --prefix "$(PREFIX)"
+	bash "$(ROOT)/scripts/build.sh" uninstall --prefix "$(PREFIX)"
 deps:
-	bash "$(ROOT)/build.sh" deps
+	bash "$(ROOT)/scripts/build.sh" deps
 check:
-	bash "$(ROOT)/build.sh" check
+	bash "$(ROOT)/scripts/build.sh" check
 test:
 	cd "$(ROOT)" && cargo test --locked -j "$(JOBS)"
 test-gui: build

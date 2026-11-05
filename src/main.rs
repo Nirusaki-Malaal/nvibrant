@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 mod backend;
 mod gui;
 mod install;

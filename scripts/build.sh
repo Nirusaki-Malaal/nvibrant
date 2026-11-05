@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-only
 # NVibrant: native Linux source builder and curl-compatible installer.
 set -Eeuo pipefail
 trap 'printf "NVibrant: command failed (line %s). Installation was not reported as successful.\n" "$LINENO" >&2' ERR
 
 usage() {
     cat <<'HELP'
-Usage: bash build.sh [build|install|uninstall|check|deps] [options]
+Usage: bash scripts/build.sh [build|install|uninstall|check|deps] [options]
 
 Builds natively on Linux x86_64/amd64 and aarch64/arm64.
 Default action: install. Default prefix: ~/.local. No display settings are changed.
 
   --prefix PATH          Installation prefix (also NVIBRANT_PREFIX)
-  --build-dir PATH       Binary output directory (default: SOURCE/build)
+  --build-dir PATH       Binary output directory (default: SOURCE/.build/bin)
   --source-dir PATH      Use an existing checkout instead of downloading one
   --driver-version VER  NVIDIA header tag (default: installed driver, then pinned tag)
   --install-deps         Install dependencies with the system package manager
@@ -26,7 +27,7 @@ HELP
 }
 
 die() { printf 'NVibrant: %s\n' "$*" >&2; exit 1; }
-need() { command -v "$1" >/dev/null 2>&1 || die "Missing $1. Run ./build.sh deps or pass --install-deps."; }
+need() { command -v "$1" >/dev/null 2>&1 || die "Missing $1. Run make deps or pass --install-deps."; }
 
 architecture() {
     [[ $(uname -s) == Linux ]] || die 'Only Linux is supported.'
@@ -35,6 +36,12 @@ architecture() {
         aarch64|arm64) arch=arm64 ;;
         *) die "Unsupported architecture: $(uname -m). Use x86-64 or ARM64 Linux." ;;
     esac
+}
+
+cache_home() {
+    local root=${XDG_CACHE_HOME:-$HOME/.cache}
+    [[ $root == /* ]] || root=$HOME/.cache
+    printf '%s\n' "$root"
 }
 
 install_deps() {
@@ -80,8 +87,9 @@ rust_ready() {
 
 ensure_rust() {
     if rust_ready; then return; fi
-    [[ $deps == true ]] || die 'Rust/Cargo >=1.85 is required. Run install.sh, or build.sh deps to prepare dependencies.'
-    local toolchain_cache=${XDG_CACHE_HOME:-$HOME/.cache}/nvibrant/toolchain
+    [[ $deps == true ]] || die 'Rust/Cargo >=1.85 is required. Run install.sh, or make deps to prepare dependencies.'
+    local toolchain_cache
+    toolchain_cache=$(cache_home)/nvibrant/toolchain
     # This modifies only the current installer process, not the user's profile,
     # existing Rust installation, system interpreter or global toolchain defaults.
     export CARGO_HOME=$toolchain_cache/cargo RUSTUP_HOME=$toolchain_cache/rustup
@@ -107,8 +115,8 @@ check_deps() {
 get_source() {
     if [[ -z $source_dir && -f ${BASH_SOURCE[0]:-} ]]; then
         local candidate
-        candidate=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-        if [[ -f $candidate/Cargo.toml && -f $candidate/src/main.rs ]]; then
+        candidate=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+        if [[ -f $candidate/Cargo.toml && -f $candidate/src/main.rs && $candidate/scripts/build.sh -ef ${BASH_SOURCE[0]} ]]; then
             source_dir=$candidate
         fi
     fi
@@ -124,7 +132,7 @@ get_source() {
 }
 
 get_headers() {
-    local tag cache_dir
+    local cache_dir
     if [[ -z $driver_version ]]; then
         if [[ -r /sys/module/nvidia/version ]]; then
             read -r driver_version < /sys/module/nvidia/version
@@ -134,12 +142,7 @@ get_headers() {
         fi
     fi
     [[ $driver_version =~ ^[0-9]+(\.[0-9]+){1,3}$ ]] || die "Invalid NVIDIA driver version: $driver_version"
-    tag=$(git -C "$source_dir/open-gpu" describe --tags --exact-match 2>/dev/null || true)
-    if [[ $tag == "$driver_version" && -f $source_dir/open-gpu/src/nvidia-modeset/interface/nvkms-api.h ]]; then
-        headers=open-gpu
-        return
-    fi
-    cache_dir=${XDG_CACHE_HOME:-$HOME/.cache}/nvibrant/headers
+    cache_dir=$(cache_home)/nvibrant/headers
     mkdir -p -- "$cache_dir"
     headers=$cache_dir/$driver_version
     if [[ ! -f $headers/.nvibrant-headers-ready ]]; then
@@ -203,7 +206,7 @@ main() {
     if [[ $action == build && -n $temporary_source && -z $build_dir ]]; then
         die 'For a downloaded source build, supply --build-dir /absolute/output/path; use install for curl installation.'
     fi
-    build_dir=${build_dir:-$source_dir/build}
+    build_dir=${build_dir:-$source_dir/.build/bin}
     if [[ -n ${NVIBRANT_NVIDIA_HEADERS:-} ]]; then
         headers=$NVIBRANT_NVIDIA_HEADERS
     else
@@ -212,9 +215,9 @@ main() {
     [[ $headers == /* ]] || headers=$source_dir/$headers
     printf 'Using NVIDIA headers %s from %s\n' "$driver_version" "$headers"
     export NVIBRANT_NVIDIA_HEADERS=$headers
-    local target_dir=$source_dir/target
+    local target_dir=$source_dir/.build/target
     if [[ -n $temporary_source ]]; then
-        target_dir=${XDG_CACHE_HOME:-$HOME/.cache}/nvibrant/target/$arch
+        target_dir=$(cache_home)/nvibrant/target/$arch
     fi
     (cd -- "$source_dir" && cargo build --release --locked --target-dir "$target_dir" -j "$jobs")
     mkdir -p -- "$build_dir"

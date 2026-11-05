@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 //! Exercise the curl entry point without downloading code or installing packages.
 use std::{
     fs,
@@ -65,7 +66,7 @@ fn default_curl_install_prepares_dependencies_and_preserves_arguments() {
     );
     assert_eq!(
         fs::read_to_string(dir.path().join("url")).unwrap(),
-        "https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/build.sh\n"
+        "https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/main/scripts/build.sh\n"
     );
 }
 #[test]
@@ -80,7 +81,7 @@ fn no_deps_and_source_ref_are_forwarded_correctly() {
     assert!(
         fs::read_to_string(dir.path().join("url"))
             .unwrap()
-            .contains("/v2.0.0/build.sh")
+            .contains("/v2.0.0/scripts/build.sh")
     );
 }
 #[test]
@@ -131,7 +132,7 @@ chmod +x "$CARGO_HOME/bin/rustc" "$CARGO_HOME/bin/cargo"
     )
     .unwrap();
     let output = Command::new("/bin/bash")
-        .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("build.sh"))
+        .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("scripts/build.sh"))
         .args(["check", "--install-deps"])
         .env("PATH", format!("{}:/usr/bin:/bin", bin.display()))
         .env("XDG_CACHE_HOME", dir.path().join("cache"))

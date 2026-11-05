@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use crate::backend::Port;
 use anyhow::{Context, Result, ensure};
 use fs2::FileExt;

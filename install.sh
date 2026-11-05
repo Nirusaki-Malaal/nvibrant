@@ -1,5 +1,6 @@
 #!/bin/sh
-# NVibrant's portable curl entry point. The build/install implementation is build.sh.
+# SPDX-License-Identifier: GPL-3.0-only
+# NVibrant's portable curl entry point. The build/install implementation is scripts/build.sh.
 set -eu
 fail() { printf 'NVibrant: %s\n' "$*" >&2; exit 1; }
 fetch() {
@@ -52,7 +53,7 @@ if ! command -v bash >/dev/null 2>&1; then
 fi
 work=$(mktemp -d "${TMPDIR:-/tmp}/nvibrant-bootstrap.XXXXXXXX")
 trap 'rm -rf -- "$work"' EXIT HUP INT TERM
-fetch "https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/$ref/build.sh" "$work/build.sh"
+fetch "https://raw.githubusercontent.com/Nirusaki-Malaal/nvibrant/$ref/scripts/build.sh" "$work/build.sh"
 # Keep argument boundaries intact, including installation prefixes with spaces.
 if [ "$install_deps" = yes ]; then
     bash "$work/build.sh" install --install-deps "$@"

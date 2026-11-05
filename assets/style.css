@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
 /* Minimal, opaque black. Scope every rule to this application. */
 window.aero, .aero * { border-radius: 0; }
 window.aero {

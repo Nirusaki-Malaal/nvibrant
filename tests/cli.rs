@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use std::{
     fs,
     path::Path,
@@ -26,6 +27,14 @@ fn installed_binary_is_self_contained_and_uninstall_preserves_preferences() {
         "{}",
         String::from_utf8_lossy(&output.stderr)
     );
+    let payload = prefix.join("lib/nvibrant");
+    assert!(
+        fs::read_to_string(payload.join("LICENSE"))
+            .unwrap()
+            .contains("GNU GENERAL PUBLIC LICENSE")
+    );
+    assert!(payload.join("licenses/MIT-upstream.txt").is_file());
+    assert!(payload.join("NOTICE.md").is_file());
     let installed = prefix.join("bin/nvibrant-gtk");
     let output = Command::new(&installed)
         .arg("--version")
