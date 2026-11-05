@@ -1,7 +1,7 @@
 [project]
 site_name = "NVibrant"
 site_author = "Tremeschin"
-site_description = "🟢 Nvidia Digital Vibrance and Dithering on Wayland"
+site_description = "Tool for Wayland to change vibrancy on NVIDIA GPUs."
 site_url  = "https://nvibrant.tremeschin.com/"
 repo_url  = "https://github.com/Nirusaki-Malaal/nvibrant/"
 repo_name = "Nirusaki-Malaal/nvibrant"

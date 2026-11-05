@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=NVibrant
-Comment=NVIDIA digital vibrance
+Comment=Tool for Wayland to change vibrancy on NVIDIA GPUs.
 Exec=nvibrant-gtk
 Icon=io.github.nvibrant.Aero
 Terminal=false

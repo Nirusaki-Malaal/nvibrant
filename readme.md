@@ -1,5 +1,7 @@
 # NVibrant
 
+Tool for Wayland to change vibrancy on NVIDIA GPUs.
+
 A native **Rust + GTK 4** app for NVIDIA digital vibrance on Linux. An Ubuntu wordmark,
 a minimal black interface with square corners, automatic NVIDIA display detection, per-display sliders
 and four presets. The title pairs a green “N” with a small NVIDIA SVG.

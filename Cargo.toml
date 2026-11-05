@@ -4,7 +4,7 @@ version = "2.0.0"
 edition = "2024"
 rust-version = "1.85"
 license = "MIT"
-description = "Native Rust NVIDIA digital vibrance control for Linux"
+description = "Tool for Wayland to change vibrancy on NVIDIA GPUs."
 repository = "https://github.com/Nirusaki-Malaal/nvibrant"
 
 [dependencies]

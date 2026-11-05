@@ -170,7 +170,7 @@ pub fn install(prefix: &Path) -> Result<()> {
         include_str!("../license.txt"),
     )?;
     let entry = format!(
-        "[Desktop Entry]\nType=Application\nName=NVibrant\nComment=NVIDIA digital vibrance\nExec={}\nIcon={ID}\nTerminal=false\nCategories=Settings;HardwareSettings;\nKeywords=NVIDIA;Vibrance;Display;Color;\n",
+        "[Desktop Entry]\nType=Application\nName=NVibrant\nComment=Tool for Wayland to change vibrancy on NVIDIA GPUs.\nExec={}\nIcon={ID}\nTerminal=false\nCategories=Settings;HardwareSettings;\nKeywords=NVIDIA;Vibrance;Display;Color;\n",
         quoted(&gui)
     );
     let restore = format!(
