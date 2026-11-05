@@ -103,3 +103,61 @@ fn failed_download_never_runs_the_build() {
     assert!(!output.status.success());
     assert!(output.stdout.is_empty());
 }
+
+#[test]
+fn outdated_rust_gets_a_private_toolchain_without_replacing_the_existing_one() {
+    let (dir, bin) = fixture();
+    let executable = |name: &str, text: &str| {
+        let path = bin.join(name);
+        fs::write(&path, text).unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+    };
+    executable("id", "#!/bin/sh\nprintf '0\\n'\n");
+    executable("apt-get", "#!/bin/sh\nexit 0\n");
+    executable("pkg-config", "#!/bin/sh\nexit 0\n");
+    executable("clang", "#!/bin/sh\nexit 0\n");
+    let old = "#!/bin/sh\nprintf 'rustc 1.70.0 (fixture)\\n'\n";
+    executable("rustc", old);
+    executable("cargo", "#!/bin/sh\nexit 0\n");
+    fs::write(
+        dir.path().join("build-fixture.sh"),
+        r#"#!/bin/sh
+printf '%s\n' "$@" > "$NVIBRANT_TEST_RUSTUP_ARGS"
+mkdir -p "$CARGO_HOME/bin"
+printf '#!/bin/sh\nprintf "rustc 1.85.0 (fixture)\\n"\n' > "$CARGO_HOME/bin/rustc"
+printf '#!/bin/sh\nexit 0\n' > "$CARGO_HOME/bin/cargo"
+chmod +x "$CARGO_HOME/bin/rustc" "$CARGO_HOME/bin/cargo"
+"#,
+    )
+    .unwrap();
+    let output = Command::new("/bin/bash")
+        .arg(Path::new(env!("CARGO_MANIFEST_DIR")).join("build.sh"))
+        .args(["check", "--install-deps"])
+        .env("PATH", format!("{}:/usr/bin:/bin", bin.display()))
+        .env("XDG_CACHE_HOME", dir.path().join("cache"))
+        .env("NVIBRANT_TEST_URL", dir.path().join("url"))
+        .env("NVIBRANT_TEST_FIXTURE", dir.path().join("build-fixture.sh"))
+        .env("NVIBRANT_TEST_RUSTUP_ARGS", dir.path().join("rustup-args"))
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(fs::read_to_string(bin.join("rustc")).unwrap(), old);
+    assert!(
+        dir.path()
+            .join("cache/nvibrant/toolchain/cargo/bin/rustc")
+            .exists()
+    );
+    assert!(
+        fs::read_to_string(dir.path().join("rustup-args"))
+            .unwrap()
+            .contains("--no-modify-path")
+    );
+    assert_eq!(
+        fs::read_to_string(dir.path().join("url")).unwrap(),
+        "https://sh.rustup.rs\n"
+    );
+}
