@@ -115,5 +115,5 @@ options, and [GUI.md](GUI.md) for controls and compatibility.
 Based on [Tremeschin/nvibrant](https://github.com/Tremeschin/nvibrant), rewritten
 in Rust for this fork. NVIDIA ABI bindings are generated at build time from the
 [Open GPU Kernel Modules](https://github.com/NVIDIA/open-gpu-kernel-modules) headers.
-NVIDIA logo SVG from [Simple Icons](https://github.com/simple-icons/simple-icons/blob/develop/icons/nvidia.svg);
+The title uses a hand-coded NVIDIA-style eye SVG.
 NVIDIA is a trademark of NVIDIA Corporation. MIT license for the application; see [license.txt](license.txt).

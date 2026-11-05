@@ -131,7 +131,7 @@ main() {
             -h|--help) usage; return ;;
             --install-deps) deps=true; shift ;;
             --prefix|--build-dir|--source-dir|--driver-version|--jobs|--ref)
-                (($# >= 2)) && [[ -n $2 ]] || die "Missing value for $1"
+                if (($# < 2)) || [[ -z ${2:-} ]]; then die "Missing value for $1"; fi
                 case $1 in
                     --prefix) prefix=$2 ;; --build-dir) build_dir=$2 ;;
                     --source-dir) source_dir=$2 ;; --driver-version) driver_version=$2 ;;

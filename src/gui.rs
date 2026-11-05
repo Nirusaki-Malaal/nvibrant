@@ -102,7 +102,7 @@ impl Ui {
         )))
         .expect("Embedded NVIDIA SVG must be valid");
         let logo = gtk::Image::from_paintable(Some(&gdk::Texture::for_pixbuf(&pixbuf)));
-        logo.set_pixel_size(34);
+        logo.set_pixel_size(40);
         logo.set_valign(gtk::Align::Center);
         logo.update_property(&[gtk::accessible::Property::Label("NVIDIA")]);
         hero.append(&logo);

@@ -22,4 +22,16 @@ jobs:
     steps:
       - uses: BrokenSource/Pages@main
       - uses: actions/upload-pages-artifact@v5
+      - name: Check Pages configuration
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/pages" > /dev/null 2>&1; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Pages is not configured on this fork; website artifact is available above."
+          fi
       - uses: actions/deploy-pages@v5
+        if: steps.pages.outputs.enabled == 'true'
